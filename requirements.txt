@@ -1,1 +1,4 @@
 annoy
+numpy
+theano
+lasagne

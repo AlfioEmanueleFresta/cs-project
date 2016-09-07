@@ -1,4 +1,6 @@
 import lasagne
+import theano.tensor as T
+import numpy as np
 
 
 class LSTMNetwork:
@@ -42,16 +44,17 @@ class LSTMNetwork:
                  dense_layers_activation=DENSE_LAYERS_ACTIVATION,
                  dense_layers_w=DENSE_LAYERS_W):
 
-        ## TODO
-        input_var = None
-        mask_var = None
+        self.features_no = word_vector_size
+        self.input_var = T.tensor3('inputs')
+        self.mask_var = T.matrix('mask')
+        self.target_var = T.tensor3('targets')
 
         # Building the neural network
         #########################################################
 
         # Input and mask layer
-        l_in = lasagne.layers.InputLayer(shape=(None, None, word_vector_size), input_var=input_var)
-        l_mask = lasagne.layers.InputLayer(shape=(None, None), input_var=mask_var)
+        l_in = lasagne.layers.InputLayer(shape=(None, None, self.features_no), input_var=self.input_var)
+        l_mask = lasagne.layers.InputLayer(shape=(None, None), input_var=self.mask_var)
 
         # LSTM Layer
         l_lstm = lasagne.layers.recurrent.LSTMLayer(l_in, lstm_layer_size, mask_input=l_mask,
@@ -65,15 +68,15 @@ class LSTMNetwork:
         n_batch, n_sequence_length, n_features = l_in.input_var.shape
         l_reshape = lasagne.layers.ReshapeLayer(l_sum, (-1, lstm_layer_size))
 
-        l_dense = lasagne.layers.DenseLayer(l_reshape, num_units=1,
+        l_dense = lasagne.layers.DenseLayer(l_reshape, num_units=self.features_no,
                                             nonlinearity=dense_layers_activation,
                                             W=dense_layers_w())
 
-        l_out = lasagne.layers.ReshapeLayer(l_dense, (n_batch, n_sequence_length))
-
+        l_out = lasagne.layers.ReshapeLayer(l_dense, (n_batch, n_sequence_length, word_vector_size))
         self.network = l_out
 
     def train(self,
+              filename,
               objective=TRAIN_OBJECTIVE,
               max_epochs=TRAIN_MAX_EPOCHS,
               batch_size=TRAIN_BATCH_SIZE,
@@ -81,5 +84,16 @@ class LSTMNetwork:
               updates_learning_rate=TRAIN_UPDATES_LEARNING_RATE,
               updates_momentum=TRAIN_UPDATES_MOMENTUM
               ):
+
         # TODO max_epochs should be used as upper bound -- intelligent early termination.
-        pass
+
+        self._save(filename)
+
+    def _save(self, filename):
+        parameters = lasagne.layers.get_all_param_values(self.network)
+        np.savez(filename, *parameters)
+
+    def load(self, filename):
+        with np.load(filename) as f:
+            param_values = [f['arr_%d' % i] for i in range(len(f.files))]
+        lasagne.layers.set_all_param_values(self.network, param_values)
