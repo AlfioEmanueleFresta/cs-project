@@ -154,7 +154,6 @@ class MLPNetwork(GenericNetwork):
                 inputs = list([glove.get_sentence_matrix(x[0], max_words=self.max_words_per_sentence) for x in tuples_batch])
                 targets = list([one_hot(n=self.output_categories_no, i=self.data['answers'].index(x[1])) for x in tuples_batch])
                 assert len(inputs) == len(targets)
-                assert len(inputs[0]) == len(targets[0])
                 yield inputs, targets
 
         train, val, test = get_split_data(questions_and_answers,
@@ -180,19 +179,19 @@ class MLPNetwork(GenericNetwork):
                 val_err += err
                 val_batches += 1
 
-                ex_in += [' '.join(glove.matrix_to_words(x)) for x in inputs]
-                ex_ta += [self._get_answer_by_one_hot_vector(x) for x in targets]
-                ex_pr += [self._get_answer_by_one_hot_vector(x) for x in pred]
+                #ex_in += [' '.join(glove.matrix_to_words(x)) for x in inputs]
+                #ex_ta += [self._get_answer_by_one_hot_vector(x) for x in targets]
+                #ex_pr += [self._get_answer_by_one_hot_vector(x) for x in pred]
 
             print("Epoch %d/%d" % (epoch + 1, max_epochs), end=" ")
             print("took %f seconds." % (time.time() - start_time))
             print("    Training loss....: %f" % (train_err / train_batches))
             print("    Validation loss..: %f" % (val_err / val_batches))
 
-        for a, b, c in zip(ex_in, ex_ta, ex_pr):
-            print(" -- Input.....: %s" % a)
-            print("  - Target....: %s" % b)
-            print("  - Prediction: %s" % c)
+        #for a, b, c in zip(ex_in, ex_ta, ex_pr):
+            #print(" -- Input.....: %s" % a)
+            #print("  - Target....: %s" % b)
+            #print("  - Prediction: %s" % c)
 
         super(MLPNetwork, self).train(*args, **kwargs)
 
