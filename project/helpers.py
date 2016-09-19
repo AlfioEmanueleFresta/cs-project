@@ -15,18 +15,22 @@ def load_questions_and_answers(filename):
 
         line_no = 0
         for line in f.readlines():
-            line = line.rstrip('\n')
+
+            line = line.rstrip('\n').strip()
             line_no += 1
 
             if line.startswith(QUESTION_DELIMITER):
+
                 question = line[len(QUESTION_DELIMITER)-1:].strip()
                 questions.append(question)
 
             elif line.startswith(ANSWER_DELIMITER):
+
                 answer = line[len(ANSWER_DELIMITER)-1:].strip()
                 answers.append(answer)
 
-            elif not line.strip():
+            elif not line:
+
                 if (questions and not answers) or (not questions and answers):
                     raise ValueError("Group terminating at line %d has questions but no answers, or viceversa." % line_no)
 
@@ -48,33 +52,28 @@ def get_all_questions_and_answers(qas):
                 yield q, a
 
 
+def get_all_questions(qas):
+    for questions, _ in qas:
+        for q in questions:
+            yield q
+
+
 def get_all_answers(qas):
     for _, answers in qas:
         for a in answers:
             yield a
 
 
-def get_split_data(questions_and_answers, train_percentage=.75, shuffle=True):
-
-    if train_percentage <= 0 or train_percentage > 1:
-        raise ValueError("train_percentage need to be between 0 and 1.")
-
-    all_questions = list(get_all_questions_and_answers(questions_and_answers))
-
-    if shuffle:
-        np.random.shuffle(all_questions)
-
-    all_questions_no = len(all_questions)
-
-    training_no = int(all_questions_no * train_percentage)
-    training = all_questions[0:training_no]
-
-    validation_no = int((all_questions_no - training_no) / 2)
-
-    validation = all_questions[training_no:training_no + validation_no]
-    testing = all_questions[training_no + validation_no:]
-
-    return training, validation, testing
+def unique(l):
+    l = list(l)
+    l = sorted(l)
+    r = []
+    i = None
+    for k in l:
+        if i != k:
+            i = k
+            r.append(k)
+    return r
 
 
 def get_options_combinations(options):

@@ -2,3 +2,4 @@ annoy
 numpy
 theano
 lasagne
+ordered-set

@@ -51,13 +51,12 @@ class Glove:
 
             vector_length += len(self.ALL_SYM)
             self.vector_length = vector_length
-            print("Allocating vector of length %d" % self.vector_length)
-
             self.index = AnnoyIndex(f=self.vector_length)
             self.words = []
             self.vectors = {}
             self.trees_no = trees_no
             self.retrieve_accuracy_factor = retrieve_accuracy_factor
+
             words_index = 0
 
             cache_filename = "%s.cache" % filename
@@ -137,7 +136,7 @@ class Glove:
             return self.vectors[word]
         return None
 
-    def get_sentence_matrix(self, sentence, max_words):
+    def get_sentence_matrix(self, sentence, max_words, show_workings=False):
         # Create an empty matrix made of empty vectors, dimension (max_words, vector_size)
         matrix = np.tile(self._empty_vector(), (max_words, 1))
 
@@ -159,7 +158,17 @@ class Glove:
             if vector:
                 matrix[word_i] = np.array(vector)
 
+                if show_workings:
+                    print(word, end=" ")
+
+            elif show_workings:
+                print("[%s]" % word, end=" ")
+
             word_i += 1
+
+        if show_workings:
+            print("")
+
         return matrix
 
     def _empty_vector(self):
