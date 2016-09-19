@@ -4,3 +4,6 @@
 data/*cache
 data/*txt
 data/*gz
+
+*.npz
+*.npz.json
