@@ -1,26 +1,19 @@
 from project.helpers import get_options_combinations
 from project.vectorization.glove import Glove
 from project.network.mlp import MLPNetwork
-
-import sys
 import datetime
 
 
 options = {
     'vector_size': [50],
-    'train_percentage': [0.6],
-    'max_epochs': [200],
+    'train_percentage': [0.7],
+    'max_epochs': [500],
     'dense_layers': [2],
-    'dense_layers_size': [400],
+    'dense_layers_size': [500],
     'dense_layers_dropout': [0.0]
 }
 
-
-i = 0
-
 for options in get_options_combinations(options):
-
-    i += 1
 
     print(datetime.datetime.now())
     print(options)
@@ -31,7 +24,7 @@ for options in get_options_combinations(options):
     vector_size = g.vector_length
 
     n = MLPNetwork(input_features_no=vector_size,
-                   output_categories_no=30,
+                   output_categories_no=9,
                    max_words_per_sentence=15,
                    dense_layers=options['dense_layers'],
                    dense_layers_size=options['dense_layers_size'],

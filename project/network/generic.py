@@ -38,6 +38,7 @@ class GenericNetwork:
         if item in self.data['params']:
             # print("REQ %s=%s" % (item, self.data['params'][item]))
             return self.data['params'][item]
+        raise AttributeError
 
     def build_network(self):
         raise NotImplementedError
@@ -84,7 +85,8 @@ class GenericNetwork:
                                               show_workings=True)
 
     def _answers_filter(self, answer_id):
-        return one_hot_encode(n=self.output_categories_no, i=answer_id)
+        return one_hot_encode(n=self.output_categories_no, i=answer_id,
+                              positive=1.0, negative=0.0)  # Force float
 
     def _iterate_minibatches(self, questions_and_answers):
         questions, answers = questions_and_answers
@@ -111,10 +113,10 @@ class GenericNetwork:
         if self.train_data_percentage <= 0 or self.train_data_percentage > 1:
             raise ValueError("train_percentage need to be between 0 and 1.")
 
-        if self.train_shuffle:
-            qas = zip(questions, answers)
-            np.random.shuffle(qas)
-            questions, answers = zip(*qas)
+        if self.train_data_shuffle:
+            indices = np.array(range(questions.shape[0]))
+            np.random.shuffle(indices)
+            questions, answers = questions[indices], answers[indices]
 
         all_questions_no = questions.shape[0]
         training_no = int(all_questions_no * self.train_data_percentage)

@@ -22,9 +22,11 @@ class MLPNetwork(GenericNetwork):
             'dense_layers_size': 400,
             'dense_layers_dropout': 0.0,
 
+            'output_layer_activation': lasagne.nonlinearities.softmax,
+
             # Training options
             'train_objective': lasagne.objectives.categorical_crossentropy,
-            'train_max_epochs': 200,
+            'train_max_epochs': 500,
             'train_updates': lasagne.updates.nesterov_momentum,
             'train_updates_learning_rate': 0.01,
             'train_updates_momentum': 0.9,
@@ -64,7 +66,7 @@ class MLPNetwork(GenericNetwork):
             l_dense = lasagne.layers.DropoutLayer(l_in, p=self.dense_layers_dropout)
 
         l_out = lasagne.layers.DenseLayer(l_dense, num_units=self.output_categories_no,
-                                          nonlinearity=self.dense_layers_activation,
+                                          nonlinearity=self.output_layer_activation,
                                           W=self.dense_layers_w())
 
         l_out = lasagne.layers.ReshapeLayer(l_out, shape=(-1, self.output_categories_no))
