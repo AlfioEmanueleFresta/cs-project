@@ -16,11 +16,11 @@ class MLPNetwork(GenericNetwork):
         defaults = super(MLPNetwork, self).defaults()
         defaults.update({
             # Dense Layers
-            'dense_layers': 2,
+            'dense_layers': 4,
             'dense_layers_activation': lasagne.nonlinearities.sigmoid,
             'dense_layers_w': lasagne.init.GlorotUniform,
-            'dense_layers_size': 400,
-            'dense_layers_dropout': 0.0,
+            'dense_layers_size': 30,
+            'dense_layers_dropout': 0.3,
 
             'output_layer_activation': lasagne.nonlinearities.softmax,
 

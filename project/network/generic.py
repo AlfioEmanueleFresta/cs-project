@@ -20,7 +20,7 @@ class GenericNetwork:
                 'train_batch_size': 1,
                 'train_data_test': False,
                 'train_data_shuffle': True,
-                'train_data_percentage': 0.75,
+                'train_data_percentage': 0.6,
                 }
 
     def __init__(self, input_features_no, output_categories_no, **kwargs):
