@@ -5,7 +5,7 @@ import datetime
 
 
 options = {
-    'vector_size': [50],
+    'vector_size': [300],
     'train_percentage': [0.7],
     'max_epochs': [500],
     'dense_layers': [2],
