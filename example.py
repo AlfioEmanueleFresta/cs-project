@@ -6,13 +6,14 @@ import datetime
 
 
 options = {
-    'vector_size': [300],
+    'glove_use_cache': [True],
+    'vector_size': [300],        # 50 for loading speed, 300 for accuracy.
     'train_percentage': [0.7],
     'max_epochs': [500],
     'dense_layers': [2],
     'dense_layers_size': [200],
     'dense_layers_dropout': [0.3],
-    'network_class': [MLPNetwork]
+    'network_class': [LSTMNetwork]
 }
 
 for options in get_options_combinations(options):
@@ -22,7 +23,8 @@ for options in get_options_combinations(options):
 
     vector_size = options['vector_size']
 
-    g = Glove('data/glove.6B.%dd.txt.gz' % vector_size, verbose=True)
+    g = Glove('data/glove.6B.%dd.txt.gz' % vector_size,
+              verbose=True, use_cache=options['glove_use_cache'])
     vector_size = g.vector_length
 
     network_class = options['network_class']

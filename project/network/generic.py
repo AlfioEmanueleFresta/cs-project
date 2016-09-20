@@ -81,8 +81,7 @@ class GenericNetwork:
         return questions, answers
 
     def _questions_filter(self, sentence):
-        return self.glove.get_sentence_matrix(sentence, max_words=self.max_words_per_sentence,
-                                              show_workings=True)
+        return self.glove.get_sentence_matrix(sentence, max_words=self.max_words_per_sentence)
 
     def _answers_filter(self, answer_id):
         return one_hot_encode(n=self.output_categories_no, i=answer_id,

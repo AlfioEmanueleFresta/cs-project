@@ -15,7 +15,7 @@ class Glove:
     SYM_END = 'SYMEND'
     SYM_EMPTY = 'SYMEMPTY'
 
-    SYM_CHARS = ['.', ',', '!', '?']
+    SYM_CHARS = ['.', ',', '!', '?', "'"]
 
     ALL_SYM = [SYM_END, SYM_EMPTY] + SYM_CHARS
 
@@ -136,7 +136,9 @@ class Glove:
             return self.vectors[word]
         return None
 
-    def get_sentence_matrix(self, sentence, max_words, show_workings=False):
+    def get_sentence_matrix(self, sentence, max_words,
+                            show_workings=False,
+                            synonyms_no=4):
         # Create an empty matrix made of empty vectors, dimension (max_words, vector_size)
         matrix = np.tile(self._empty_vector(), (max_words, 1))
 
@@ -144,8 +146,9 @@ class Glove:
         for sym in self.SYM_CHARS:
             sentence = sentence.replace(sym, " %s" % sym)
 
-        words = sentence.split(' ')
-        words.append(self.SYM_END)
+        words = sentence.split(' ')               # Split by space character
+        words = [word.strip() for word in words]  # Remove excess spacing
+        words.append(self.SYM_END)                # Append the end character
         word_i = 0
 
         if len(words) > max_words:
@@ -159,10 +162,12 @@ class Glove:
                 matrix[word_i] = np.array(vector)
 
                 if show_workings:
-                    print(word, end=" ")
+                    synonyms = self.get_closest_words(vector, n=synonyms_no + 1)[1:]
+                    synonyms = ' '.join(synonyms)
+                    print("%s {%s}" % (word, synonyms), end="  ")
 
             elif show_workings:
-                print("[%s]" % word, end=" ")
+                print("[%s]" % word, end="  ")
 
             word_i += 1
 
