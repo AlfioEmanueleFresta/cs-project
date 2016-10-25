@@ -1,0 +1,165 @@
+# Rephrase prompts
+
+#?: Can you rephrase that please?
+#?: I'm not sure I understood. Can you rephrase that?
+#?: I'm sorry, I did not understand that.
+
+# Give-up sentence
+
+#G: I'm sorry I was not able to help you today. Please find a human assistant at the reception.
+
+
+########################################
+#           TRAINING DATA              #
+########################################
+#
+# Format: At least one question, followed by at least one possible formulation for an answer:
+#         Questions should start with 'Q: ', answers should start with 'A: '.
+#         Comments start with '#', and will be ignored by the program.
+#
+# Example:
+#   Q: What is your name?
+#   Q: What do people call you?
+#   A: My name is Andy.
+#   A: I'm known as Andy, nice to meet you.
+#
+
+
+# Kingston University London, Open Day FAQs
+# http://www.kingston.ac.uk/opendays/pre-application-open-days/frequently-asked-questions/#times
+
+Q: What time does the Open Day start and finish
+Q: What time does the event start
+Q: When does the day start
+Q: What time does the event finish
+Q: When does the event end
+Q: When does registration start
+A: Registration opens from ... and the day finishes at ...
+
+Q: Do I have to stay the whole day
+Q: Can I only stay part of the day
+Q: Can I attend only a few sessions
+Q: Do I have to attend all sessions
+A: You can attend any part of the ... you wish, although we do advise you to attend all talks and take part in the various activities happening throughout the day.
+
+Q: Can I bring family
+Q: Can I bring friends
+Q: Can a friend come with me
+Q: Can I bring a family member
+Q: Can I bring my parents
+Q: Can my parents come with me
+Q: Is it a problem if my family comes with me
+Q: Is it a problem if I bring a friend
+Q: Can I take a guest with me
+Q: How many guests can I bring with me
+A: You are welcome to bring up to three guests with you - parents, family or friends.
+
+Q: Do I need to register on arrival
+Q: Should I register when I arrive
+Q: Where should I go when I arrive
+Q: Where do we register
+Q: Where can we register on arrival
+Q: Should we check in on the day
+A: You can register at ... when you arrive. Bring a phone with the confirmation email with you, or a printed copy.
+
+Q: Where can I get the programme
+Q: Is there a programme
+Q: Is there a schedule
+Q: Can I get the schedule for the day
+Q: Where can I find the programme
+Q: Is there a lunch break
+Q: Is there going to be any break during the day
+Q: Is there a pause in between these events
+A: The programme can be found at the registration desk.
+
+Q: Is disabled parking available
+Q: Is there any parking space
+Q: Where can I park my car
+Q: Is there a car park
+Q: Where is the car park
+A: A car park is available for blue badge holders at all campuses.
+
+Q: Is there any food or drink
+Q: Is there anywhere to eat on campus
+Q: Will you serve any food or drink
+Q: Where can I eat some food
+Q: Where can I find something to eat
+Q: I'm hungry
+Q: I am peckish
+Q: I have a bit of an appetite
+Q: I would like to eat something
+A: We have free tea and coffee station at ..., if your hungrier, you can find food ...
+
+Q: Is there a human I can talk to
+Q: Is there someone else I can talk to
+Q: I need to talk to a human
+Q: Who can I talk to
+A: You can find a human ..., at the registration desk.
+
+
+# Southampton University, Open Day FAQs
+# http://www.southampton.ac.uk/about/visit/open-day-faqs.page
+
+Q: Are all subjects represented at the event
+Q: Which subjects are represented at the open day
+Q: Is the open day for all modules
+Q: Is there a separate open day for medicine
+A: All of the subjects are represented at the open day.
+
+Q: Where can I stay overnight
+Q: Where can I stay for the night
+Q: Is there any accommodation around here
+Q: Can you suggest any particular hotel
+Q: Bed and breakfast
+Q: Hotel
+A: We are unable to offer accommodation, ..., but we can offer our guests discounted rates ...
+
+
+# Imperial College London, Open Day FAQs
+# https://www.imperial.ac.uk/study/ug/visit/open-days/frequently-asked-questions/
+
+Q: How do I get to the college
+Q: How do I get to the theatre
+Q: I can't find the college
+Q: I can't find the theatre
+Q: I'm lost
+Q: Where should I go
+A: You can get a complete map at the registration desk.
+
+Q: Can I go on a campus tour
+Q: I would like to take a tour of the campus
+Q: Do you offer guided tours of the university
+Q: I would like a tour
+Q: I'm here for a tour
+Q: I'd like to be shown around the university
+A: A campus tour ...
+
+Q: Can we tour the student accommodation
+Q: I'd like to be shown around the accommodations
+Q: Can we see the student residence
+Q: We'd like to see the halls
+Q: Can I go on a accommodations tour
+A: Accommodations tours ...
+
+Q: Is there any luggage storage
+Q: Do you have storage for any baggage
+Q: Can we store our luggage during the day
+Q: Do you have a cloakroom
+A: There is a cloakroom facility at ...
+
+
+# Bangor University, What to expect on an Open Day
+# https://www.bangor.ac.uk/openday/expect.php.en
+
+Q: Who can I talk to about student finance
+Q: What are the tuition fees
+Q: Tuition fees
+Q: Is there a presentation on student finance
+Q: Who can I ask about financing
+A: There will be student finance session ...
+
+Q: Do you have any sport facilities
+Q: Is there a gym
+Q: What sports can you practice
+Q: What sporting societies are there
+A: Sports facilities are ...
