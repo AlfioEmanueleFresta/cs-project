@@ -27,6 +27,7 @@ class TrainingData:
     def _load(self):
         question_delimiter = 'Q: '
         answer_delimiter = 'A: '
+        comment_delimiter = '#'
 
         with open(self.filename, 'rt') as f:
             questions, answers = [], []
@@ -43,6 +44,9 @@ class TrainingData:
                 elif line.startswith(answer_delimiter):
                     answer = line[len(answer_delimiter) - 1:].strip()
                     answers.append(answer)
+
+                elif line.startswith(comment_delimiter):
+                    continue
 
                 elif not line:
                     if (questions and not answers) or (not questions and answers):
