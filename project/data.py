@@ -29,7 +29,7 @@ class TrainingData:
         answer_delimiter = 'A: '
         comment_delimiter = '#'
 
-        with open(self.filename, 'rt') as f:
+        with open(self.filename, 'rt', encoding='utf-8') as f:
             questions, answers = [], []
 
             line_no = 0
