@@ -36,6 +36,3 @@ for options in get_options_combinations(options):
         print("Training interrupted. Continuing.")
     # n.save("x.npz")
     n.interactive_predict(glove=g)
-
-
-
