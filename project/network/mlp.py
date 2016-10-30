@@ -69,7 +69,7 @@ class MLPNetwork(GenericNetwork):
                                           nonlinearity=self.output_layer_activation,
                                           W=self.dense_layers_w())
 
-        l_out = lasagne.layers.ReshapeLayer(l_out, shape=(-1, self.output_categories_no))
+        #l_out = lasagne.layers.ReshapeLayer(l_out, shape=(-1, self.output_categories_no))
         self.network = l_out
 
     def train(self,
@@ -96,6 +96,12 @@ class MLPNetwork(GenericNetwork):
         val_fn = theano.function([self.input_var, self.target_var],
                                  [prediction, test_loss],
                                  allow_input_downcast=self.allow_input_downcast)
+
+        pred_fn = theano.function([self.input_var],
+                                  [prediction],
+                                  allow_input_downcast=self.allow_input_downcast)
+
+        self.prediction_function = pred_fn
 
         questions_and_answers = self.get_prepared_training_data()
         self.verbose and print("Starting training...")

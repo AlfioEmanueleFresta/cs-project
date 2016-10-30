@@ -15,7 +15,7 @@ class Glove:
     SYM_END = 'SYMEND'
     SYM_EMPTY = 'SYMEMPTY'
 
-    SYM_CHARS = ['.', ',', '!', '?', "'"]
+    SYM_CHARS = ['.', ',', '!', '?', "'", ':', '"']
 
     ALL_SYM = [SYM_END, SYM_EMPTY] + SYM_CHARS
 
@@ -138,13 +138,14 @@ class Glove:
 
     def get_sentence_matrix(self, sentence, max_words,
                             show_workings=False,
-                            synonyms_no=4):
+                            synonyms_no=5):
+
         # Create an empty matrix made of empty vectors, dimension (max_words, vector_size)
         matrix = np.tile(self._empty_vector(), (max_words, 1))
 
         # Make all supported symbols their own word.
         for sym in self.SYM_CHARS:
-            sentence = sentence.replace(sym, " %s" % sym)
+            sentence = sentence.replace(sym, " %s " % sym)
 
         words = sentence.split(' ')               # Split by space character
         words = [word.strip() for word in words]  # Remove excess spacing
@@ -164,10 +165,10 @@ class Glove:
                 if show_workings:
                     synonyms = self.get_closest_words(vector, n=synonyms_no + 1)[1:]
                     synonyms = ' '.join(synonyms)
-                    print("%s {%s}" % (word, synonyms), end="  ")
+                    print("%s {%s}" % (word, synonyms), end="  ", flush=True)
 
             elif show_workings:
-                print("[%s]" % word, end="  ")
+                print("[%s]" % word, end="  ", flush=True)
 
             word_i += 1
 
@@ -208,7 +209,9 @@ class Glove:
         :return: A list of words or tuples (word, distance).
         """
 
-        closest = self.index.get_nns_by_vector(vector, n=n, search_k=self._get_search_k(n=n),
+        search_k = self._get_search_k(n=n)
+        assert len(vector) == self.vector_length
+        closest = self.index.get_nns_by_vector(vector, n=n, search_k=search_k,
                                                include_distances=include_distances)
 
         if include_distances:

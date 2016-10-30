@@ -1,12 +1,11 @@
 import lasagne
 import theano.tensor as T
 import theano
-import numpy as np
-import os
 import time
-import readline
 
+import matplotlib.pyplot as plt
 
+from project.laplotter import LossAccPlotter
 from .generic import GenericNetwork
 
 
@@ -17,25 +16,24 @@ class LSTMNetwork(GenericNetwork):
         defaults.update({
             # LSTM Layers
             'lstm_layers': 2,
-            'lstm_layers_size': 500,
+            'lstm_layers_size': 75,
             'lstm_layers_activation': lasagne.nonlinearities.sigmoid,
             'lstm_layers_precompute_input': True,
             'lstm_layers_learn_init': True,
             'lstm_layers_only_return_final': False,
 
-
             # Dense Layers
-            'dense_layers': 4,
+            'dense_layers': 1,
             'dense_layers_activation': lasagne.nonlinearities.sigmoid,
             'dense_layers_w': lasagne.init.GlorotUniform,
-            'dense_layers_size': 500,
+            'dense_layers_size': 125,
             'dense_layers_dropout': 0.3,
 
             'output_layer_activation': lasagne.nonlinearities.softmax,
 
             # Training options
             'train_objective': lasagne.objectives.categorical_crossentropy,
-            'train_max_epochs': 500,
+            'train_max_epochs': 1500,
             'train_updates': lasagne.updates.nesterov_momentum,
             'train_updates_learning_rate': 0.01,
             'train_updates_momentum': 0.9,
@@ -43,6 +41,7 @@ class LSTMNetwork(GenericNetwork):
             # General configuration
             'allow_input_downcast': True,
             'verbose': True,
+            'include_mask': True,
         })
         return defaults
 
@@ -53,7 +52,7 @@ class LSTMNetwork(GenericNetwork):
         kwargs.update({'max_words_per_sentence': max_words_per_sentence})
 
         self.input_var = T.tensor3('inputs')
-        self.mask_var = T.tensor3('mask')
+        self.mask_var = T.matrix('masks')
         self.target_var = T.matrix('targets')
 
         super(LSTMNetwork, self).__init__(**kwargs)
@@ -66,14 +65,19 @@ class LSTMNetwork(GenericNetwork):
 
         # Input and mask layer
 
-        input_shape = (None, None, self.input_features_no)
+        # TODO first dimension can be self.train_batch_size, but can't feed fewer data points.
+        #      this means that the last mini batch, if not 'full', can't be fed into the network.
+        input_shape = (None, self.max_words_per_sentence, self.input_features_no)
+        mask_shape = (None, self.max_words_per_sentence)
 
         l_in = lasagne.layers.InputLayer(shape=input_shape, input_var=self.input_var)
+        l_mask = lasagne.layers.InputLayer(shape=mask_shape, input_var=self.mask_var)
 
         l_forward = l_in
         for i in range(self.lstm_layers):
             l_forward = lasagne.layers.LSTMLayer(
                 l_in, self.lstm_layers_size,
+                mask_input=l_mask,
                 nonlinearity=self.lstm_layers_activation,
                 only_return_final=((self.lstm_layers-1) == i) or self.lstm_layers_only_return_final,
                 precompute_input=self.lstm_layers_precompute_input,
@@ -108,48 +112,80 @@ class LSTMNetwork(GenericNetwork):
         test_prediction = lasagne.layers.get_output(self.network, deterministic=True)
         test_loss = self.train_objective(test_prediction, self.target_var)
         test_loss = test_loss.mean()
+        test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1),
+                               T.argmax(self.target_var, axis=1)),
+                          dtype=theano.config.floatX)
 
-        train_fn = theano.function([self.input_var, self.target_var],
+        train_fn = theano.function([self.input_var, self.mask_var, self.target_var],
                                    loss,
                                    updates=updates,
                                    allow_input_downcast=self.allow_input_downcast)
 
-        val_fn = theano.function([self.input_var, self.target_var],
-                                 [prediction, test_loss],
+        val_fn = theano.function([self.input_var, self.mask_var, self.target_var],
+                                 [prediction, test_loss, test_acc],
                                  allow_input_downcast=self.allow_input_downcast)
+
+        pred_fn = theano.function([self.input_var, self.mask_var],
+                                  [prediction],
+                                  allow_input_downcast=self.allow_input_downcast)
+
+        self.prediction_function = pred_fn
 
         questions_and_answers = self.get_prepared_training_data()
         self.verbose and print("Starting training...")
 
+        train, val, _ = self._get_split_data(questions_and_answers)
+
+        print("Epoch      Time        Tr. loss   Val. loss  Val. acc.   B  Best acc. ")
+        print("---------  ----------  ---------  ---------  ----------  -  ----------")
+
+        train_losses, val_losses = [], []
+        plotter = LossAccPlotter("Some title",
+                                 show_acc_plot=False,
+                                 show_plot_window=True)
+
+        best_loss, best_acc = None, 0
+
         # TODO max_epochs should be used as upper bound -- intelligent early termination.
         for epoch in range(self.train_max_epochs):
-
-            train, val, _ = self._get_split_data(questions_and_answers)
 
             train_err, train_batches = 0, 0
             start_time = time.time()
 
             for batch in self._iterate_minibatches(train):
-                inputs, targets = batch
-                err = train_fn(inputs, targets)
+                inputs, mask, targets = batch
+                err = train_fn(inputs, mask, targets)
                 train_err += err
                 train_batches += 1
 
-            val_err, val_batches = 0, 0
+            val_err, val_batches, val_acc = 0, 0, 0
             #ex_in, ex_ta, ex_pr = [], [], []
             for batch in self._iterate_minibatches(val):
-                inputs, targets = batch
-                pred, err = val_fn(inputs, targets)
+                inputs, mask, targets = batch
+                pred, err, acc = val_fn(inputs, mask, targets)
                 val_err += err
+                val_acc += acc
                 val_batches += 1
 
-            print("Epoch %d/%d" % (epoch + 1, self.train_max_epochs), end=" ")
-            print("took %f seconds." % (time.time() - start_time))
-            print("    Training loss....: %f" % (train_err / train_batches))
-            print("    Validation loss..: %f" % (val_err / val_batches))
+            train_loss = train_err / train_batches
+            val_loss = val_err / val_batches
+            val_acc = val_acc / val_batches * 100
 
-        #for a, b, c in zip(ex_in, ex_ta, ex_pr):
-            #print(" -- Input.....: %s" % a)
-            #print("  - Target....: %s" % b)
-            #print("  - Prediction: %s" % c)
+            is_best_loss = False
+            if best_loss is None or val_loss < best_loss:
+                is_best_loss = True
+                best_loss = val_loss
+                best_acc = val_acc
+                self.mark_best()
 
+            print("%4d/%4d  %9.6fs  %9.6f  "
+                  "%9.6f  %9.5f%%  %s  %9.5f%%" %
+                  (epoch + 1, self.train_max_epochs,
+                   time.time() - start_time,
+                   train_loss, val_loss, val_acc,
+                   "*" if is_best_loss else " ", best_acc))
+
+            # Plot!
+            plotter.add_values(epoch + 1,
+                               loss_train=train_loss,
+                               loss_val=val_loss)

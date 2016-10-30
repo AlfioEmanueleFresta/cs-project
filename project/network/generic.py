@@ -15,6 +15,7 @@ class GenericNetwork:
 
     def defaults(self):
         return {'verbose': True,
+                'include_mask': False,
 
                 # Training options
                 'train_batch_size': 1,
@@ -32,7 +33,9 @@ class GenericNetwork:
 
         self.data = {'params': defaults}
         self.training_data = None
+        self.prediction_function = None
         self.glove = None
+        self.best_parameters = None
 
     def __getattr__(self, item):
         if item in self.data['params']:
@@ -70,25 +73,34 @@ class GenericNetwork:
 
     def get_prepared_training_data(self):
         # Note: This is not a generator on purpose (as you want to pre-process!)
-        questions, answers = [], []
+        questions, masks, answers = [], [], []
         self.verbose and print("Preparing training data...", end=" ", flush=True)
+
         for question, answer_id in self.training_data.questions:
             questions.append(self._questions_filter(question))
+            masks.append(self._questions_mask_filter(question))
             answers.append(self._answers_filter(answer_id))
-        questions, answers = np.array(questions), np.array(answers)
-        self.verbose and print("OK")
-        assert questions.shape[0] == answers.shape[0]
-        return questions, answers
 
-    def _questions_filter(self, sentence):
-        return self.glove.get_sentence_matrix(sentence, max_words=self.max_words_per_sentence)
+        questions, masks, answers = np.array(questions), np.array(masks), np.array(answers)
+        self.verbose and print("OK")
+
+        assert questions.shape[0] == masks.shape[0]
+        assert questions.shape[0] == answers.shape[0]
+        return questions, masks, answers
+
+    def _questions_filter(self, sentence, **kwargs):
+        return self.glove.get_sentence_matrix(sentence, max_words=self.max_words_per_sentence, **kwargs)
+
+    def _questions_mask_filter(self, sentence):
+        return self._get_mask(self._questions_filter(sentence))
 
     def _answers_filter(self, answer_id):
         return one_hot_encode(n=self.output_categories_no, i=answer_id,
                               positive=1.0, negative=0.0)  # Force float
 
-    def _iterate_minibatches(self, questions_and_answers):
-        questions, answers = questions_and_answers
+    def _iterate_minibatches(self, questions_and_answers,
+                             include_mask=False):
+        questions, masks, answers = questions_and_answers
         while True:
             assert questions.shape[0] == answers.shape[0]
 
@@ -97,17 +109,33 @@ class GenericNetwork:
             if not this_batch_size:
                 break
 
-            these_questions, these_answers = questions[:this_batch_size], answers[:this_batch_size]
-            questions, answers = questions[this_batch_size:], answers[this_batch_size:]
+            these_questions, these_masks, these_answers = questions[:this_batch_size], masks[:this_batch_size], answers[:this_batch_size]
+            questions, masks, answers = questions[this_batch_size:], masks[this_batch_size:], answers[this_batch_size:]
 
             assert these_questions.shape[0] == these_answers.shape[0]
+            assert these_questions.shape[0] == these_masks.shape[0]
             assert these_questions.shape[0] <= self.train_batch_size
 
-            yield these_questions, these_answers
+            if self.include_mask:
+                yield these_questions, these_masks, these_answers
+
+            else:
+                yield these_questions, these_answers
+
+    def _get_mask(self, vector):
+        assert vector.shape == (self.max_words_per_sentence, self.glove.vector_length)
+        mask = np.zeros((self.max_words_per_sentence,))
+        i = 0
+        for element in vector:
+            mask[i] = 1
+            if np.array_equal(element, self.glove.vectors[self.glove.SYM_END]):
+                break
+            i += 1
+        return mask
 
     def _get_split_data(self, tuples):
 
-        questions, answers = tuples
+        questions, masks, answers = tuples
 
         if self.train_data_percentage <= 0 or self.train_data_percentage > 1:
             raise ValueError("train_percentage need to be between 0 and 1.")
@@ -115,17 +143,22 @@ class GenericNetwork:
         if self.train_data_shuffle:
             indices = np.array(range(questions.shape[0]))
             np.random.shuffle(indices)
-            questions, answers = questions[indices], answers[indices]
+            questions, masks, answers = questions[indices], masks[indices], answers[indices]
 
         all_questions_no = questions.shape[0]
         training_no = int(all_questions_no * self.train_data_percentage)
-        training = questions[0:training_no], answers[0:training_no]
+        training = questions[0:training_no], masks[0:training_no], answers[0:training_no]
 
         divisor = 2 if self.train_data_test else 1
         validation_no = int((all_questions_no - training_no) / divisor)
 
-        validation = questions[training_no:training_no + validation_no], answers[training_no:training_no + validation_no]
-        testing = questions[training_no + validation_no:], answers[training_no + validation_no:]
+        validation = questions[training_no:training_no + validation_no], \
+                     masks[training_no:training_no + validation_no], \
+                     answers[training_no:training_no + validation_no]
+
+        testing = questions[training_no + validation_no:], \
+                  masks[training_no + validation_no:], \
+                  answers[training_no + validation_no:]
 
         return training, validation, testing
 
@@ -133,6 +166,13 @@ class GenericNetwork:
         if not isinstance(glove, Glove):
             raise ValueError("The glove needs to be a 'Glove' object.")
         self.glove = glove
+
+    def mark_best(self):
+        self.best_parameters = lasagne.layers.get_all_param_values(self.network)
+
+    def _get_best(self):
+        assert self.best_parameters is not None
+        lasagne.layers.set_all_param_values(self.network, self.best_parameters)
 
     def load(self, model_filename, json_filename=None):
         if not json_filename:
@@ -146,11 +186,14 @@ class GenericNetwork:
         self.verbose and print("OK")
 
     def interactive_predict(self, glove):
-        print("Compiling prediction function...")
-        prediction = lasagne.layers.get_output(self.network)
-        pred_fn = theano.function([self.input_var],
-                                  [prediction],
-                                  allow_input_downcast=True)
+        import readline
+
+        self._get_best()  # Get the best validation score.
+
+        if not self.prediction_function:
+            raise ValueError("Can't predict without a 'prediction_function'.")
+
+        pred_fn = self.prediction_function
 
         print("Interactive shell. Type 'exit' to close.")
 
@@ -162,16 +205,29 @@ class GenericNetwork:
                 print("Bye!")
                 break
 
-            i = glove.get_sentence_matrix(sentence, max_words=self.max_words_per_sentence,
-                                          show_workings=True)
-            i = np.array([i])
+            i = self._questions_filter(sentence, show_workings=True)
+            m = self._questions_mask_filter(sentence)
 
-            o = pred_fn(i)
+            i = np.array([i])
+            m = np.array([m])
+
+            ts = time.time()
+
+            if self.include_mask:
+                o = pred_fn(i, m)
+
+            else:
+                o = pred_fn(i)
+
             o = o[0][0]
             print(o)
+            te = time.time()
+            t = te - ts
 
             o = self._get_answer_by_one_hot_vector(o, limit_to=len(self.training_data.answers))
             print(o)
+
+            print("predicted in %.4f seconds" % t)
 
     def _get_answer_by_index(self, i):
         try:
