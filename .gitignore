@@ -7,3 +7,6 @@ data/*gz
 
 *.npz
 *.npz.json
+
+.venv
+
