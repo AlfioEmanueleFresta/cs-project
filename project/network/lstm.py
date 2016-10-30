@@ -138,7 +138,7 @@ class LSTMNetwork(GenericNetwork):
 
         plotter = LossAccPlotter("Training loss and training accuracy",
                                  show_plot_window=True,
-                                 show_regressions=False)
+                                 show_averages=False)
 
         best_loss, best_acc = None, 0
 
