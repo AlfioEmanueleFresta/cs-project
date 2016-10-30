@@ -7,7 +7,7 @@ import datetime
 
 options = {
     'glove_use_cache': [True],
-    'vector_size': [100],        # 50 for loading speed, 300 for accuracy.
+    'vector_size': [50],        # 50 for loading speed, 300 for accuracy.
     'network_class': [LSTMNetwork]
 }
 

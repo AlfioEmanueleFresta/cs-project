@@ -4,3 +4,4 @@ theano
 lasagne
 ordered-set
 tabulate
+matplotlib

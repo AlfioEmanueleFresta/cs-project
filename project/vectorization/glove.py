@@ -42,7 +42,7 @@ class Glove:
         if verbose:
             print("Loading Glove vector %s (compressed=%d)..." % (filename, compressed))
 
-        with opener(filename, 'rt') as input_file:
+        with opener(filename, 'rt', encoding='utf-8') as input_file:
 
             first_row = input_file.readline().split(separator)
             input_file.seek(0)  # Don't skip the first row later
