@@ -3,3 +3,4 @@ numpy
 theano
 lasagne
 ordered-set
+tabulate
