@@ -245,8 +245,10 @@ class LossAccPlotter(object):
             self.values_acc_val[x_index] = acc_val
 
         if redraw:
-            self.redraw()
-            plt.pause(0.005)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.redraw()
+                plt.pause(0.005)
 
     def block(self):
         """Function to show the plot in a blocking way.
@@ -327,7 +329,9 @@ class LossAccPlotter(object):
             self._initialize_plot()
 
         # activate the plot, in case another plot was opened since the last call
-        plt.figure(self.fig.number)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            plt.figure(self.fig.number)
 
         # shorter local variables
         ax1 = self.ax_loss
@@ -370,7 +374,9 @@ class LossAccPlotter(object):
                        bbox_to_anchor=(0.5, -0.08),
                        ncol=ncol)
 
-        plt.draw()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            plt.draw()
 
         # save the redrawn plot to a file upon every redraw.
         if self.save_to_filepath is not None:
