@@ -45,6 +45,7 @@ import warnings
 import math
 from collections import OrderedDict
 
+
 def ignore_nan_and_inf(value, label, x_index):
     """Helper function that creates warnings on NaN/INF and converts them to None.
     Args:
@@ -66,6 +67,7 @@ def ignore_nan_and_inf(value, label, x_index):
         return None
     else:
         return value
+
 
 class LossAccPlotter(object):
     """Class to plot loss and accuracy charts (for training and validation data)."""
@@ -244,6 +246,7 @@ class LossAccPlotter(object):
 
         if redraw:
             self.redraw()
+            plt.pause(0.005)
 
     def block(self):
         """Function to show the plot in a blocking way.

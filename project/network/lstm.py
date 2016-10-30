@@ -2,9 +2,6 @@ import lasagne
 import theano.tensor as T
 import theano
 import time
-
-import matplotlib.pyplot as plt
-
 from project.laplotter import LossAccPlotter
 from .generic import GenericNetwork
 
@@ -117,7 +114,7 @@ class LSTMNetwork(GenericNetwork):
                           dtype=theano.config.floatX)
 
         train_fn = theano.function([self.input_var, self.mask_var, self.target_var],
-                                   loss,
+                                   [loss, test_acc],
                                    updates=updates,
                                    allow_input_downcast=self.allow_input_downcast)
 
@@ -139,23 +136,23 @@ class LSTMNetwork(GenericNetwork):
         print("Epoch      Time        Tr. loss   Val. loss  Val. acc.   B  Best acc. ")
         print("---------  ----------  ---------  ---------  ----------  -  ----------")
 
-        train_losses, val_losses = [], []
-        plotter = LossAccPlotter("Some title",
-                                 show_acc_plot=False,
-                                 show_plot_window=True)
+        plotter = LossAccPlotter("Training loss and training accuracy",
+                                 show_plot_window=True,
+                                 show_regressions=False)
 
         best_loss, best_acc = None, 0
 
         # TODO max_epochs should be used as upper bound -- intelligent early termination.
         for epoch in range(self.train_max_epochs):
 
-            train_err, train_batches = 0, 0
+            train_err, train_acc, train_batches = 0, 0, 0
             start_time = time.time()
 
             for batch in self._iterate_minibatches(train):
                 inputs, mask, targets = batch
-                err = train_fn(inputs, mask, targets)
+                err,  acc = train_fn(inputs, mask, targets)
                 train_err += err
+                train_acc += acc
                 train_batches += 1
 
             val_err, val_batches, val_acc = 0, 0, 0
@@ -168,6 +165,7 @@ class LSTMNetwork(GenericNetwork):
                 val_batches += 1
 
             train_loss = train_err / train_batches
+            train_acc = train_acc / train_batches
             val_loss = val_err / val_batches
             val_acc = val_acc / val_batches * 100
 
@@ -188,4 +186,7 @@ class LSTMNetwork(GenericNetwork):
             # Plot!
             plotter.add_values(epoch + 1,
                                loss_train=train_loss,
-                               loss_val=val_loss)
+                               acc_train=train_acc,
+                               loss_val=val_loss,
+                               acc_val=val_acc)
+
