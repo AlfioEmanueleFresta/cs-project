@@ -316,7 +316,7 @@ class GenericNetwork:
             self.data = json.loads(f.read())
         self.verbose and print("OK")
 
-    def interactive_predict(self, glove):
+    def interactive_predict(self):
         import readline
 
         self._get_best()  # Get the best validation score.
