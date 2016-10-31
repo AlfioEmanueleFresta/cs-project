@@ -3,10 +3,8 @@ from annoy import AnnoyIndex
 import os
 import numpy as np
 
-from ..helpers import one_hot_encode, one_hot_decode
 
-
-class Glove:
+class WordEmbedding:
 
     DEFAULT_TREES_NO = 150
     DEFAULT_SEPARATOR = ' '
@@ -14,10 +12,9 @@ class Glove:
 
     SYM_END = 'SYMEND'
     SYM_EMPTY = 'SYMEMPTY'
+    SYM_CHARS = []
 
-    SYM_CHARS = ['.', ',', '!', '?', "'", ':', '"']
-
-    ALL_SYM = [SYM_END, SYM_EMPTY] + SYM_CHARS
+    ALL_SYM = [SYM_END, SYM_EMPTY]
 
     def __init__(self, filename, trees_no=DEFAULT_TREES_NO,
                  separator=DEFAULT_SEPARATOR,
@@ -40,7 +37,7 @@ class Glove:
         opener = gzip.open if compressed else open
 
         if verbose:
-            print("Loading Glove vector %s (compressed=%d)..." % (filename, compressed))
+            print("Loading Word Embedding %s (compressed=%d)..." % (filename, compressed))
 
         with opener(filename, 'rt', encoding='utf-8') as input_file:
 

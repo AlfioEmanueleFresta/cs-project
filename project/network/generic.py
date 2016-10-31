@@ -2,13 +2,14 @@ import lasagne
 import theano.tensor as T
 import theano
 import numpy as np
-import os
 import time
 import json
+import readline  # Looks unused, but it is not!
 
 from project.data import TrainingData
 from project.helpers import one_hot_decode, one_hot_encode
-from project.vectorization.glove import Glove
+from project.laplotter import LossAccPlotter
+from project.vectorization.embedding import WordEmbedding
 
 
 class GenericNetwork:
@@ -19,7 +20,7 @@ class GenericNetwork:
 
                 # Training options
                 'train_batch_size': 1,
-                'train_data_test': False,
+                'train_data_test': True,
                 'train_data_shuffle': True,
                 'train_data_percentage': 0.7,
                 }
@@ -34,6 +35,7 @@ class GenericNetwork:
         self.data = {'params': defaults}
         self.training_data = None
         self.prediction_function = None
+        self.validation_function = None
         self.glove = None
         self.best_parameters = None
 
@@ -46,8 +48,137 @@ class GenericNetwork:
     def build_network(self):
         raise NotImplementedError
 
-    def train(self, output_filename):
-        raise NotImplementedError
+    def train(self,
+              *args, **kwargs
+              ):
+
+        self.verbose and print("Compiling functions...")
+        prediction = lasagne.layers.get_output(self.network)
+        loss = self.train_objective(prediction, self.target_var)
+        loss = loss.mean()
+
+        params = lasagne.layers.get_all_params(self.network, trainable=True)
+        updates = lasagne.updates.adam(loss, params)
+
+        test_prediction = lasagne.layers.get_output(self.network, deterministic=True)
+        test_loss = self.train_objective(test_prediction, self.target_var)
+        test_loss = test_loss.mean()
+        test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1),
+                               T.argmax(self.target_var, axis=1)),
+                          dtype=theano.config.floatX)
+
+        train_fn = theano.function([self.input_var, self.mask_var, self.target_var],
+                                   [loss, test_acc],
+                                   updates=updates,
+                                   allow_input_downcast=self.allow_input_downcast)
+
+        val_fn = theano.function([self.input_var, self.mask_var, self.target_var],
+                                 [prediction, test_loss, test_acc],
+                                 allow_input_downcast=self.allow_input_downcast)
+
+        pred_fn = theano.function([self.input_var, self.mask_var],
+                                  [prediction],
+                                  allow_input_downcast=self.allow_input_downcast)
+
+        self.prediction_function = pred_fn
+        self.validation_function = val_fn
+
+        questions_and_answers = self.get_prepared_training_data()
+        self.verbose and print("Starting training. You can use CTRL-C "
+                               "to stop the training process.")
+
+        train, val, test = self._get_split_data(questions_and_answers)
+
+        print("Epoch      Time        Tr. loss   Val. loss  Val. acc.   B  Best acc. ")
+        print("---------  ----------  ---------  ---------  ----------  -  ----------")
+
+        best_loss, best_acc, best_epoch = None, 0, None
+
+        try:
+
+            plotter = LossAccPlotter("Training loss and training accuracy",
+                                     show_plot_window=True,
+                                     show_averages=False)
+
+            # TODO max_epochs should be used as upper bound -- intelligent early termination.
+            for epoch in range(self.train_max_epochs):
+
+                train_err, train_acc, train_batches = 0, 0, 0
+                start_time = time.time()
+
+                for batch in self._iterate_minibatches(train):
+                    inputs, mask, targets = batch
+                    err,  acc = train_fn(inputs, mask, targets)
+                    train_err += err
+                    train_acc += acc
+                    train_batches += 1
+
+                val_err, val_batches, val_acc = 0, 0, 0
+                for batch in self._iterate_minibatches(val):
+                    inputs, mask, targets = batch
+                    pred, err, acc = val_fn(inputs, mask, targets)
+                    val_err += err
+                    val_acc += acc
+                    val_batches += 1
+
+                train_loss = train_err / train_batches
+                train_acc = train_acc / train_batches
+                val_loss = val_err / val_batches
+                val_acc = val_acc / val_batches * 100
+
+                is_best_loss = False
+                if best_loss is None or val_loss < best_loss:
+                    is_best_loss = True
+                    best_loss = val_loss
+                    best_acc = val_acc
+                    best_epoch = epoch
+                    self.mark_best()
+
+                print("%4d/%4d  %9.6fs  %9.6f  "
+                      "%9.6f  %9.5f%%  %s  %9.5f%%" %
+                      (epoch + 1, self.train_max_epochs,
+                       time.time() - start_time,
+                       train_loss, val_loss, val_acc,
+                       "*" if is_best_loss else " ", best_acc))
+
+                # Plot!
+                plotter.add_values(epoch + 1,
+                                   loss_train=train_loss,
+                                   acc_train=train_acc,
+                                   loss_val=val_loss,
+                                   acc_val=val_acc)
+
+        except KeyboardInterrupt:
+            print("Training interrupted at epoch %d." % epoch)
+            print("Best result (epoch=%d, loss=%9.6f, accuracy"
+                  "=%9.5f%%)" % (best_epoch, best_loss, best_acc))
+
+        self._test(test)
+
+    def _test(self, test_data):
+
+        if not self.train_data_test:
+            print("Skipping testing (train_data_set=False).")
+            return
+
+        print("Testing network...", end=" ", flush=True)
+
+        try:
+            val_fn = self.validation_function
+            test_err, test_acc, test_batches = 0, 0, 0
+            for batch in self._iterate_minibatches(test_data):
+                inputs, mask, targets = batch
+                _, err, acc = val_fn(inputs, mask, targets)
+                test_err += err
+                test_acc += acc
+                test_batches += 1
+            print("DONE", flush=True)
+            test_loss = test_err / test_batches
+            test_acc = test_acc / test_batches * 100
+            print("Test results (loss=%9.6f, accuracy=%9.5f%%)" % (test_loss, test_acc))
+
+        except KeyboardInterrupt:
+            print("SKIPPED")
 
     def predict(self, input_data):
         raise NotImplementedError
@@ -62,10 +193,10 @@ class GenericNetwork:
             f.write(json.dumps(self.data))
         self.verbose and print("OK")
 
-    def load_training_data(self, filename):
+    def load_training_data(self, training_data):
         if not self.glove:
             raise ValueError("Need to load a Glove object before loading the training data.")
-        self.training_data = TrainingData(filename)
+        self.training_data = training_data
         if len(self.training_data.answers) > self.output_categories_no:
             raise ValueError("You are trying to load %d answers, more than "
                              "'output_categories_no' which is %d." % (len(self.training_data.answers),
@@ -163,7 +294,7 @@ class GenericNetwork:
         return training, validation, testing
 
     def load_glove(self, glove):
-        if not isinstance(glove, Glove):
+        if not isinstance(glove, WordEmbedding):
             raise ValueError("The glove needs to be a 'Glove' object.")
         self.glove = glove
 

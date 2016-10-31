@@ -1,10 +1,5 @@
 import lasagne
 import theano.tensor as T
-import theano
-import numpy as np
-import os
-import time
-import readline
 
 
 from .generic import GenericNetwork
@@ -71,70 +66,4 @@ class MLPNetwork(GenericNetwork):
 
         #l_out = lasagne.layers.ReshapeLayer(l_out, shape=(-1, self.output_categories_no))
         self.network = l_out
-
-    def train(self,
-              *args, **kwargs
-              ):
-
-        self.verbose and print("Compiling functions...")
-        prediction = lasagne.layers.get_output(self.network)
-        loss = self.train_objective(prediction, self.target_var)
-        loss = loss.mean()
-
-        params = lasagne.layers.get_all_params(self.network, trainable=True)
-        updates = lasagne.updates.adam(loss, params)
-
-        test_prediction = lasagne.layers.get_output(self.network, deterministic=True)
-        test_loss = self.train_objective(test_prediction, self.target_var)
-        test_loss = test_loss.mean()
-
-        train_fn = theano.function([self.input_var, self.target_var],
-                                   loss,
-                                   updates=updates,
-                                   allow_input_downcast=self.allow_input_downcast)
-
-        val_fn = theano.function([self.input_var, self.target_var],
-                                 [prediction, test_loss],
-                                 allow_input_downcast=self.allow_input_downcast)
-
-        pred_fn = theano.function([self.input_var],
-                                  [prediction],
-                                  allow_input_downcast=self.allow_input_downcast)
-
-        self.prediction_function = pred_fn
-
-        questions_and_answers = self.get_prepared_training_data()
-        self.verbose and print("Starting training...")
-
-        # TODO max_epochs should be used as upper bound -- intelligent early termination.
-        for epoch in range(self.train_max_epochs):
-
-            train, val, _ = self._get_split_data(questions_and_answers)
-
-            train_err, train_batches = 0, 0
-            start_time = time.time()
-
-            for batch in self._iterate_minibatches(train):
-                inputs, targets = batch
-                err = train_fn(inputs, targets)
-                train_err += err
-                train_batches += 1
-
-            val_err, val_batches = 0, 0
-            #ex_in, ex_ta, ex_pr = [], [], []
-            for batch in self._iterate_minibatches(val):
-                inputs, targets = batch
-                pred, err = val_fn(inputs, targets)
-                val_err += err
-                val_batches += 1
-
-            print("Epoch %d/%d" % (epoch + 1, self.train_max_epochs), end=" ")
-            print("took %f seconds." % (time.time() - start_time))
-            print("    Training loss....: %f" % (train_err / train_batches))
-            print("    Validation loss..: %f" % (val_err / val_batches))
-
-        #for a, b, c in zip(ex_in, ex_ta, ex_pr):
-            #print(" -- Input.....: %s" % a)
-            #print("  - Target....: %s" % b)
-            #print("  - Prediction: %s" % c)
 
