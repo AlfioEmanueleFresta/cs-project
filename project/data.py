@@ -1,4 +1,5 @@
 from ordered_set import OrderedSet
+import gzip
 
 
 class TrainingData:
@@ -29,7 +30,8 @@ class TrainingData:
         answer_delimiter = 'A: '
         comment_delimiter = '#'
 
-        with open(self.filename, 'rt', encoding='utf-8') as f:
+        open_function = gzip.open if '.gz' in self.filename else open
+        with open_function(self.filename, 'rt', encoding='utf-8') as f:
             questions, answers = [], []
 
             line_no = 0

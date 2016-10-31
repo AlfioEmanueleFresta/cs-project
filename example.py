@@ -22,7 +22,7 @@ for options in get_options_combinations(options):
     g = WordEmbedding('data/glove.6B.%dd.txt' % vector_size,
                       verbose=True, use_cache=True)
 
-    t = TrainingData('data/trec.txt')
+    t = TrainingData('data/trec.txt.gz')
 
     network_class = options['network_class']
     n = network_class(input_features_no=g.vector_length,
