@@ -12,7 +12,7 @@ class WordEmbedding:
 
     SYM_END = 'SYMEND'
     SYM_EMPTY = 'SYMEMPTY'
-    SYM_CHARS = []
+    SYM_CHARS = [',', '.', '\'', '"', '`', '!', '?', ':', ';',]
 
     ALL_SYM = [SYM_END, SYM_EMPTY]
 
