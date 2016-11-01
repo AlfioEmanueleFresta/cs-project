@@ -53,7 +53,7 @@ class WordEmbedding:
             self.vectors = {}
 
             # Have at most as many trees as vector cells
-            trees_no = max(trees_no, self.vector_length)
+            trees_no = min(trees_no, self.vector_length)
             self.trees_no = trees_no
 
             self.retrieve_accuracy_factor = retrieve_accuracy_factor
