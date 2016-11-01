@@ -148,9 +148,9 @@ class WordEmbedding:
         for sym in self.SYM_CHARS:
             sentence = sentence.replace(sym, " %s " % sym)
 
-        words = sentence.split(' ')               # Split by space character
-        words = [word.strip() for word in words]  # Remove excess spacing
-        words.append(self.SYM_END)                # Append the end character
+        words = sentence.split(' ')                       # Split by space character
+        words = [word.strip() for word in words if word]  # Remove excess spacing
+        words.append(self.SYM_END)                        # Append the end character
         word_i = 0
 
         if len(words) > max_words:
