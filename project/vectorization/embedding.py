@@ -51,7 +51,11 @@ class WordEmbedding:
             self.index = AnnoyIndex(f=self.vector_length)
             self.words = []
             self.vectors = {}
-            self.trees_no = max(trees_no, self.vector_length)
+
+            # Have at most as many trees as vector cells
+            trees_no = max(trees_no, self.vector_length)
+            self.trees_no = trees_no
+
             self.retrieve_accuracy_factor = retrieve_accuracy_factor
 
             words_index = 0

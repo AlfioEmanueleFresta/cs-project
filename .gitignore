@@ -5,6 +5,10 @@ data/*cache
 data/*txt
 data/*gz
 
+# Uncompressed embeddings and cache
+data/embeddings/*.txt
+data/embeddings/*.cache
+
 *.npz
 *.npz.json
 
