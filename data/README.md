@@ -13,7 +13,7 @@
   be saved to a file, e.g.
   ```bash
   $ cd data/
-  $ python prepare-trec.py > trec.txt
+  $ python prepare-trec.py > prepared/trec.txt
 
   # Count the number of questions and answers generated.
   $ grep "Q:" trec.txt | wc -l

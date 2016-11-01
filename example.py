@@ -4,10 +4,10 @@ from project.vectorization.embedding import WordEmbedding
 from project.network.mlp import MLPNetwork
 
 
-g = WordEmbedding('data/glove.6B.50d.txt',
+g = WordEmbedding('data/embeddings/glove.6B.50d.txt',
                   verbose=True, use_cache=True)
 
-t = TrainingData('data/trec.txt.gz')
+t = TrainingData('data/prepared/trec.txt.gz')
 
 network_class = LSTMNetwork
 n = network_class(input_features_no=g.vector_length,
