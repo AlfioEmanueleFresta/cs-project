@@ -7,6 +7,7 @@ from project.vectorization.embedding import WordEmbedding
 
 parser = argparse.ArgumentParser(description='.')
 parser.add_argument('--no-train', dest='train', action='store_false', help='do not train the model.')
+parser.add_argument('--no-display', dest='display', action='store_false', help='do not show a plot on screen.')
 parser.add_argument('--transient', dest='save', action='store_false', help='do not persist the trained model to disk.')
 parser.add_argument('-v', dest='verbose', action='store_true', help='print debug information.')
 args = parser.parse_args()
@@ -22,7 +23,8 @@ n = network_class(input_features_no=g.vector_length,
                   output_categories_no=len(t.answers),
                   max_words_per_sentence=100,
                   train_batch_size=50,
-                  verbose=args.verbose)
+                  verbose=args.verbose,
+                  show_plot=args.display)
 
 n.build_network()
 

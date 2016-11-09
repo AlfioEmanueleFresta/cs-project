@@ -17,6 +17,7 @@ class GenericNetwork:
     def defaults(self):
         return {'verbose': True,
                 'include_mask': False,
+                'show_plot': True,
 
                 # Training options
                 'train_batch_size': 1,
@@ -96,9 +97,10 @@ class GenericNetwork:
 
         try:
 
-            plotter = LossAccPlotter("Training loss and training accuracy",
-                                     show_plot_window=True,
-                                     show_averages=False)
+            if self.show_plot:
+                plotter = LossAccPlotter("Training loss and training accuracy",
+                                         show_plot_window=True,
+                                         show_averages=False)
 
             # TODO max_epochs should be used as upper bound -- intelligent early termination.
             for epoch in range(self.train_max_epochs):
@@ -142,11 +144,12 @@ class GenericNetwork:
                                         "*" if is_best_loss else " ", best_acc))
 
                 # Plot!
-                self.verbose and plotter.add_values(epoch + 1,
-                                                    loss_train=train_loss,
-                                                    acc_train=train_acc,
-                                                    loss_val=val_loss,
-                                                    acc_val=val_acc)
+                if self.verbose and self.show_plot:
+                    plotter.add_values(epoch + 1,
+                                       loss_train=train_loss,
+                                       acc_train=train_acc,
+                                       loss_val=val_loss,
+                                       acc_val=val_acc)
 
         except KeyboardInterrupt:
             print("Training interrupted at epoch %d." % epoch)
