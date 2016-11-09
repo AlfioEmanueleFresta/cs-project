@@ -156,6 +156,7 @@ class GenericNetwork:
             print("Best result (epoch=%d, loss=%9.6f, accuracy"
                   "=%9.5f%%)" % (best_epoch, best_loss, best_acc))
 
+        self._get_best()  # Get the best validation score.
         self._test(test)
 
     def _test(self, test_data):
@@ -322,7 +323,6 @@ class GenericNetwork:
     def interactive_predict(self):
         import readline
 
-        self._get_best()  # Get the best validation score.
 
         if not self.prediction_function:
             raise ValueError("Can't predict without a 'prediction_function'.")
