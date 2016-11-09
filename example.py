@@ -7,6 +7,7 @@ from project.vectorization.embedding import WordEmbedding
 
 parser = argparse.ArgumentParser(description='.')
 parser.add_argument('--no-train', dest='train', action='store_false', help='do not train the model.')
+parser.add_argument('--resume', dest='resume', action='store_true', help='load and resume the training.')
 parser.add_argument('--no-display', dest='display', action='store_false', help='do not show a plot on screen.')
 parser.add_argument('--transient', dest='save', action='store_false', help='do not persist the trained model to disk.')
 parser.add_argument('-v', dest='verbose', action='store_true', help='print debug information.')
@@ -34,13 +35,14 @@ n.load_training_data(t)
 
 model_filename = "data/model.cache.npz"
 
+if (not args.train) or args.resume:
+    n.load(model_filename)
+
 if args.train:
     n.train()
 
     if args.save:
         n.save(model_filename)
 
-else:
-    n.load(model_filename)
 
 n.interactive_predict()
