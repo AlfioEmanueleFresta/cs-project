@@ -89,8 +89,8 @@ class GenericNetwork:
 
         train, val, test = self._get_split_data(questions_and_answers)
 
-        print("Epoch      Time        Tr. loss   Val. loss  Val. acc.   B  Best acc. ")
-        print("---------  ----------  ---------  ---------  ----------  -  ----------")
+        self.verbose and print("Epoch      Time        Tr. loss   Val. loss  Val. acc.   B  Best acc. ")
+        self.verbose and print("---------  ----------  ---------  ---------  ----------  -  ----------")
 
         best_loss, best_acc, best_epoch = None, 0, None
 
@@ -134,19 +134,19 @@ class GenericNetwork:
                     best_epoch = epoch
                     self.mark_best()
 
-                print("%4d/%4d  %9.6fs  %9.6f  "
-                      "%9.6f  %9.5f%%  %s  %9.5f%%" %
-                      (epoch + 1, self.train_max_epochs,
-                       time.time() - start_time,
-                       train_loss, val_loss, val_acc,
-                       "*" if is_best_loss else " ", best_acc))
+                self.verbose and print("%4d/%4d  %9.6fs  %9.6f  "
+                                       "%9.6f  %9.5f%%  %s  %9.5f%%" %
+                                       (epoch + 1, self.train_max_epochs,
+                                        time.time() - start_time,
+                                        train_loss, val_loss, val_acc,
+                                        "*" if is_best_loss else " ", best_acc))
 
                 # Plot!
-                plotter.add_values(epoch + 1,
-                                   loss_train=train_loss,
-                                   acc_train=train_acc,
-                                   loss_val=val_loss,
-                                   acc_val=val_acc)
+                self.verbose and plotter.add_values(epoch + 1,
+                                                    loss_train=train_loss,
+                                                    acc_train=train_acc,
+                                                    loss_val=val_loss,
+                                                    acc_val=val_acc)
 
         except KeyboardInterrupt:
             print("Training interrupted at epoch %d." % epoch)
@@ -158,10 +158,10 @@ class GenericNetwork:
     def _test(self, test_data):
 
         if not self.train_data_test:
-            print("Skipping testing (train_data_set=False).")
+            self.verbose and print("Skipping testing (train_data_set=False).")
             return
 
-        print("Testing network...", end=" ", flush=True)
+        self.verbose and print("Testing network...", end=" ", flush=True)
 
         try:
             val_fn = self.validation_function
@@ -172,10 +172,10 @@ class GenericNetwork:
                 test_err += err
                 test_acc += acc
                 test_batches += 1
-            print("DONE", flush=True)
+            self.verbose and print("DONE", flush=True)
             test_loss = test_err / test_batches
             test_acc = test_acc / test_batches * 100
-            print("Test results (loss=%9.6f, accuracy=%9.5f%%)" % (test_loss, test_acc))
+            self.verbose and print("Test results (loss=%9.6f, accuracy=%9.5f%%)" % (test_loss, test_acc))
 
         except KeyboardInterrupt:
             print("SKIPPED")
@@ -326,7 +326,7 @@ class GenericNetwork:
 
         pred_fn = self.prediction_function
 
-        print("Interactive shell. Type 'exit' to close.")
+        self.verbose and print("Interactive shell ready. Type 'exit' to close.")
 
         while True:
 
@@ -351,14 +351,14 @@ class GenericNetwork:
                 o = pred_fn(i)
 
             o = o[0][0]
-            print(o)
+            self.verbose and print(o)
             te = time.time()
             t = te - ts
 
             o = self._get_answer_by_one_hot_vector(o, limit_to=len(self.training_data.answers))
-            print(o)
+            print(o[0])  # TODO choose answer randomly
 
-            print("predicted in %.4f seconds" % t)
+            self.verbose and print("predicted in %.4f seconds" % t)
 
     def _get_answer_by_index(self, i):
         try:
