@@ -35,6 +35,7 @@ class GenericNetwork:
 
         self.data = {'params': defaults}
         self.training_data = None
+        self.training_function = None
         self.prediction_function = None
         self.validation_function = None
         self.glove = None
@@ -49,9 +50,7 @@ class GenericNetwork:
     def build_network(self):
         raise NotImplementedError
 
-    def train(self,
-              *args, **kwargs
-              ):
+    def compile_functions(self):
 
         self.verbose and print("Compiling functions...")
         prediction = lasagne.layers.get_output(self.network)
@@ -83,6 +82,15 @@ class GenericNetwork:
 
         self.prediction_function = pred_fn
         self.validation_function = val_fn
+        self.training_function = train_fn
+
+    def train(self,
+              *args, **kwargs
+              ):
+
+        train_fn = self.training_function
+        val_fn = self.validation_function
+        pred_fn = self.prediction_function
 
         questions_and_answers = self.get_prepared_training_data()
         self.verbose and print("Starting training. You can use CTRL-C "

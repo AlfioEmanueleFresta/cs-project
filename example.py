@@ -27,6 +27,7 @@ n = network_class(input_features_no=g.vector_length,
                   show_plot=args.display)
 
 n.build_network()
+n.compile_functions()
 
 n.load_glove(g)
 n.load_training_data(t)
