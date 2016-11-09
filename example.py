@@ -31,7 +31,7 @@ n.build_network()
 n.load_glove(g)
 n.load_training_data(t)
 
-model_filename = "data/model.cache"
+model_filename = "data/model.cache.npz"
 
 if args.train:
     n.train()
