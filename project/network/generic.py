@@ -192,8 +192,8 @@ class GenericNetwork:
         self.verbose and print("Saving model to file (%s)..." % model_filename, end=" ", flush=True)
         parameters = lasagne.layers.get_all_param_values(self.network)
         np.savez(model_filename, *parameters)
-        with open(json_filename, 'wt') as f:
-            f.write(json.dumps(self.data))
+        #with open(json_filename, 'wt') as f:
+        #    f.write(json.dumps(self.data))
         self.verbose and print("OK")
 
     def load_training_data(self, training_data):
@@ -315,8 +315,8 @@ class GenericNetwork:
         with np.load(model_filename) as f:
             param_values = [f['arr_%d' % i] for i in range(len(f.files))]
         lasagne.layers.set_all_param_values(self.network, param_values)
-        with open(json_filename, 'rt') as f:
-            self.data = json.loads(f.read())
+        #with open(json_filename, 'rt') as f:
+        #    self.data = json.loads(f.read())
         self.verbose and print("OK")
 
     def interactive_predict(self):
