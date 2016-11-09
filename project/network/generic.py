@@ -132,7 +132,7 @@ class GenericNetwork:
                     val_batches += 1
 
                 train_loss = train_err / train_batches
-                train_acc = train_acc / train_batches
+                train_acc = train_acc / train_batches * 100
                 val_loss = val_err / val_batches
                 val_acc = val_acc / val_batches * 100
 
@@ -347,7 +347,7 @@ class GenericNetwork:
                 print("Bye!")
                 break
 
-            i = self._questions_filter(sentence, show_workings=True)
+            i = self._questions_filter(sentence, show_workings=self.verbose)
             m = self._questions_mask_filter(sentence)
 
             i = np.array([i])
