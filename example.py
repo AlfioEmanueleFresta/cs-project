@@ -23,7 +23,7 @@ network_class = LSTMNetwork
 n = network_class(input_features_no=g.vector_length,
                   output_categories_no=len(t.answers),
                   max_words_per_sentence=100,
-                  train_batch_size=50,
+                  train_batch_size=250,
                   verbose=args.verbose,
                   show_plot=args.display)
 

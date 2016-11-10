@@ -232,6 +232,7 @@ class GenericNetwork:
         return questions, masks, answers
 
     def _questions_filter(self, sentence, **kwargs):
+        # TODO augment, augment, augment
         return self.glove.get_sentence_matrix(sentence, max_words=self.max_words_per_sentence, **kwargs)
 
     def _questions_mask_filter(self, sentence):

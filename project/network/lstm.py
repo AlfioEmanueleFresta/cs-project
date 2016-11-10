@@ -9,8 +9,8 @@ class LSTMNetwork(GenericNetwork):
         defaults = super(LSTMNetwork, self).defaults()
         defaults.update({
             # LSTM Layers
-            'lstm_layers': 2,
-            'lstm_layers_size': 75,
+            'lstm_layers': 1,
+            'lstm_layers_size': 25,
             'lstm_layers_activation': lasagne.nonlinearities.sigmoid,
             'lstm_layers_precompute_input': True,
             'lstm_layers_learn_init': True,
@@ -20,14 +20,14 @@ class LSTMNetwork(GenericNetwork):
             'dense_layers': 1,
             'dense_layers_activation': lasagne.nonlinearities.sigmoid,
             'dense_layers_w': lasagne.init.GlorotUniform,
-            'dense_layers_size': 125,
+            'dense_layers_size': 25,
             'dense_layers_dropout': 0.3,
 
             'output_layer_activation': lasagne.nonlinearities.softmax,
 
             # Training options
             'train_objective': lasagne.objectives.categorical_crossentropy,
-            'train_max_epochs': 1500,
+            'train_max_epochs': 250,
             'train_updates': lasagne.updates.nesterov_momentum,
             'train_updates_learning_rate': 0.01,
             'train_updates_momentum': 0.9,
