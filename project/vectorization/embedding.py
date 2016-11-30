@@ -2,6 +2,7 @@ import gzip
 from annoy import AnnoyIndex
 import os
 import numpy as np
+from project.helpers import kmeans, klp_kmeans
 
 
 class WordEmbedding:
@@ -19,7 +20,7 @@ class WordEmbedding:
     def __init__(self, filename, trees_no=DEFAULT_TREES_NO,
                  separator=DEFAULT_SEPARATOR,
                  retrieve_accuracy_factor=DEFAULT_ACCURACY_FACTOR,
-                 verbose=False,
+                 verbose=False, compute_clusters=True,
                  use_cache=True):
         """
         Instantiate and build a new search tree from a Glove vector
@@ -104,6 +105,14 @@ class WordEmbedding:
                     self.index.save(cache_filename)
 
             verbose and print("Loaded %d words with vector length=%d" % (words_index, vector_length))
+
+        if compute_clusters:
+            self._compute_clusters(verbose=verbose)
+
+    def _compute_clusters(self, verbose=False):
+        X = np.array(list(self.vectors.values()))
+        #self.clusters = kmeans(X, clusters_no=500, epochs=50, verbose=verbose)
+        self.clusters = klp_kmeans(X, cluster_num=500, batch=100, alpha=0.01, verbose=verbose)
 
     def _append_to_index(self, words_index, word, vector, cache_available=False):
         self.words.append(word)
