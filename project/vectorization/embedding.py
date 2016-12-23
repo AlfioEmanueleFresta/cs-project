@@ -11,6 +11,9 @@ class WordEmbedding:
     DEFAULT_SEPARATOR = ' '
     DEFAULT_ACCURACY_FACTOR = 5000
 
+    DEFAULT_CLUSTERS_NO = 500
+    DEFAULT_CLUSTERS_EPOCHS = 30
+
     SYM_END = 'SYMEND'
     SYM_EMPTY = 'SYMEMPTY'
     SYM_CHARS = [',', '.', '\'', '"', '`', '!', '?', ':', ';',]
@@ -20,7 +23,8 @@ class WordEmbedding:
     def __init__(self, filename, trees_no=DEFAULT_TREES_NO,
                  separator=DEFAULT_SEPARATOR,
                  retrieve_accuracy_factor=DEFAULT_ACCURACY_FACTOR,
-                 verbose=False, compute_clusters=True,
+                 verbose=False, compute_clusters=False,
+                 clusters_no=DEFAULT_CLUSTERS_NO, clusters_epochs=DEFAULT_CLUSTERS_EPOCHS,
                  use_cache=True):
         """
         Instantiate and build a new search tree from a Glove vector
@@ -96,7 +100,7 @@ class WordEmbedding:
                 verbose and print("Loading search trees from cache file (%s)..." % cache_filename)
                 self.index.load(cache_filename)
 
-            if not cache_available:
+            else:
                 verbose and print("Building %d search trees..." % trees_no)
                 self.index.build(n_trees=trees_no)
 
@@ -107,12 +111,22 @@ class WordEmbedding:
             verbose and print("Loaded %d words with vector length=%d" % (words_index, vector_length))
 
         if compute_clusters:
-            self._compute_clusters(verbose=verbose)
 
-    def _compute_clusters(self, verbose=False):
-        X = np.array(list(self.vectors.values()))
-        #self.clusters = kmeans(X, clusters_no=500, epochs=50, verbose=verbose)
-        self.clusters = klp_kmeans(X, cluster_num=500, batch=100, alpha=0.01, verbose=verbose)
+            cluster_cache_filename = "%s.%dclusters.cache.npz" % (filename, clusters_no)
+            cluster_cache_available = use_cache and os.path.isfile(cluster_cache_filename)
+
+            if cluster_cache_available:
+                verbose and print("Loading clusters from cache file (%s)..." % cluster_cache_filename)
+                self.clusters = np.load(cluster_cache_filename)
+
+            else:
+                verbose and print("Computing clusters...")
+                X = np.array(list(self.vectors.values()))
+                self.clusters = kmeans(X, clusters_no=clusters_no, epochs=clusters_epochs, verbose=verbose)
+
+                if use_cache:
+                    verbose and print("Saving clusters to cache file (%s)..." % cluster_cache_filename)
+                    np.savez(cluster_cache_filename, self.clusters)
 
     def _append_to_index(self, words_index, word, vector, cache_available=False):
         self.words.append(word)

@@ -15,7 +15,8 @@ args = parser.parse_args()
 
 
 g = WordEmbedding('data/embeddings/glove.6B.50d.txt',
-                  verbose=args.verbose, use_cache=True)
+                  verbose=args.verbose, use_cache=True,
+                  compute_clusters=True)
 
 t = TrainingData('data/prepared/trec.txt.gz')
 
