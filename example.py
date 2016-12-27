@@ -28,7 +28,7 @@ n = network_class(input_features_no=g.vector_length,
                   train_batch_size=250,
                   verbose=args.verbose,
                   show_plot=args.display,
-                  data_expander=WangExpander(3, 1.25))
+                  data_expander=WangExpander(n=3, distance=1.25, word_embedding=g))
 
 n.build_network()
 n.compile_functions()

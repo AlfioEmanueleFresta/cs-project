@@ -4,13 +4,20 @@ from project.expansion import WangExpander
 
 import numpy as np
 
+from project.vectorization.embedding import WordEmbedding
+
 
 class TestWangExpander(TestCase):
+
+    def setUp(self):
+        # Create a test word embedding
+        self.we = WordEmbedding("../data/embeddings/test.txt", trees_no=1,
+                                use_cache=False, clusters_no=2)
 
     def test_next_no_minimum_distance(self):
 
         # WangExpander w/ n=3
-        e = WangExpander(3, 0)
+        e = WangExpander(3, 0, self.we)
 
         alpha = np.array([1, 2, 3])
         bravo = np.array([-1, -2, -3])
@@ -40,13 +47,13 @@ class TestWangExpander(TestCase):
         self.assertTrue(np.array_equal(o4, np.array([delta, charlie_delta, bravo_charlie_delta])))
 
     def test__get_combinations(self):
-        e = WangExpander(3, 0)
+        e = WangExpander(3, 0, self.we)
         e.history = ["a", "b", "c"]
         self.assertEqual(list(e._get_combinations()),
                          [["c"], ["b", "c"], ["a", "b", "c"]])
 
     def test__combine_combinations(self):
-        e = WangExpander(3, 0)
+        e = WangExpander(3, 0, self.we)
         combinations = [[10], [5, 10], [2, 5, 10]]
         combined = e._merge_combinations(combinations)
         combined = list(combined)
@@ -61,7 +68,7 @@ class TestWangExpander(TestCase):
         close1 = np.array([.99, 0])
         close2 = np.array([0, .5])
 
-        e = WangExpander(4, 1)
+        e = WangExpander(4, 1, self.we)
         combinations = [far1, center, close1, far2, close2, borderline]
         filtered = e._filter_combinations(center, combinations)
         filtered = list(filtered)

@@ -48,11 +48,12 @@ class WangExpander(Expander):
     are ignored and not returned.
     """
 
-    def __init__(self, n, distance):
+    def __init__(self, n, distance, word_embedding):
         """
         Initialise the expander.
         :param n: The maximum number of consecutive words to try and match.
         :param distance: The minimum distance to keep the expansion vector.
+        :param word_embedding: The word embedding to use.
         """
         self.n = n
         self.distance = distance
@@ -87,7 +88,16 @@ class WangExpander(Expander):
             yield np.sum(combination, axis=0)
 
     def _filter_combinations(self, item, combinations):
+
+        ## TODO
+        # This is not what is detailed by Wang P and needs changing.
+        # For each combination which is NOT the item, he searches the closest cluster centroid.
+        ys, ns = 0, 0
         for combination in combinations:
             distance = np.linalg.norm(combination - item)
             if np.array_equal(combination, item) or distance >= self.distance:
+                ys += 1
                 yield combination
+            else:
+                ns += 1
+        print(ys, ns, ys + ns)

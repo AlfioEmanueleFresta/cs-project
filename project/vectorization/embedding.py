@@ -23,7 +23,7 @@ class WordEmbedding:
     def __init__(self, filename, trees_no=DEFAULT_TREES_NO,
                  separator=DEFAULT_SEPARATOR,
                  retrieve_accuracy_factor=DEFAULT_ACCURACY_FACTOR,
-                 verbose=False, compute_clusters=False,
+                 verbose=False, compute_clusters=True,
                  clusters_no=DEFAULT_CLUSTERS_NO, clusters_epochs=DEFAULT_CLUSTERS_EPOCHS,
                  use_cache=True):
         """
@@ -81,8 +81,8 @@ class WordEmbedding:
                 # Add one-hot for symbols at the end.
                 vector += [0.0 for _ in range(len(self.ALL_SYM))]
 
-                self._append_to_index(words_index, word,
-                                      vector, cache_available)
+                self._append_to_words_index(words_index, word,
+                                            vector, cache_available)
 
                 words_index += 1
 
@@ -91,8 +91,8 @@ class WordEmbedding:
                 vector = self._get_symbol_vector(symbol,
                                                  words_vector_length=(row_length - 1))
 
-                self._append_to_index(words_index, symbol,
-                                      vector, cache_available)
+                self._append_to_words_index(words_index, symbol,
+                                            vector, cache_available)
 
                 words_index += 1
 
@@ -128,7 +128,7 @@ class WordEmbedding:
                     verbose and print("Saving clusters to cache file (%s)..." % cluster_cache_filename)
                     np.savez(cluster_cache_filename, self.clusters)
 
-    def _append_to_index(self, words_index, word, vector, cache_available=False):
+    def _append_to_words_index(self, words_index, word, vector, cache_available=False):
         self.words.append(word)
         self.vectors[word] = vector
         if not cache_available:
