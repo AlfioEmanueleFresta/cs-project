@@ -117,7 +117,7 @@ class WordEmbedding:
 
             if cluster_cache_available:
                 verbose and print("Loading clusters from cache file (%s)..." % cluster_cache_filename)
-                self.clusters = np.load(cluster_cache_filename)
+                self.clusters = np.load(cluster_cache_filename)['arr_0']
 
             else:
                 verbose and print("Computing clusters...")

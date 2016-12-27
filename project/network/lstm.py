@@ -51,7 +51,8 @@ class LSTMNetwork(GenericNetwork):
 
         super(LSTMNetwork, self).__init__(**kwargs)
 
-    def build_network(self):
+    def build_network(self, input_var=None, input_shape=None,
+                            mask_var=None, mask_shape=None):
         # Building the neural network
         #########################################################
 
@@ -61,11 +62,11 @@ class LSTMNetwork(GenericNetwork):
 
         # TODO first dimension can be self.train_batch_size, but can't feed fewer data points.
         #      this means that the last mini batch, if not 'full', can't be fed into the network.
-        input_shape = (None, self.max_words_per_sentence, self.input_features_no)
-        mask_shape = (None, self.max_words_per_sentence)
+        input_shape = input_shape or (None, self.max_words_per_sentence, self.input_features_no)
+        mask_shape = mask_shape or (None, self.max_words_per_sentence)
 
-        l_in = lasagne.layers.InputLayer(shape=input_shape, input_var=self.input_var)
-        l_mask = lasagne.layers.InputLayer(shape=mask_shape, input_var=self.mask_var)
+        l_in = lasagne.layers.InputLayer(shape=input_shape, input_var=input_var or self.input_var)
+        l_mask = lasagne.layers.InputLayer(shape=mask_shape, input_var=mask_var or self.mask_var)
 
         l_forward = l_in
         for i in range(self.lstm_layers):
