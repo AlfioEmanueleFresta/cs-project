@@ -12,17 +12,23 @@ class Expander:
         """
         raise NotImplementedError
 
+    def multi(self, items):
+        output = []
+        for item in items:
+            output.append(self.next(item))
+        return np.concatenate(output, axis=0)
 
-class FakeExpander:
+
+class FakeExpander(Expander):
     """
     This is a fake expander -- which does not expand the input provided.
     """
 
     def next(self, item):
-        return item
+        return np.array([item])
 
 
-class WangExpander:
+class WangExpander(Expander):
     """
     An expander based on the work by Wang P. in "Semantic expansion using word
     embedding clustering and convolutional neural network for improving short text

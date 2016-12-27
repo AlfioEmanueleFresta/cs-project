@@ -7,6 +7,7 @@ import json
 import readline  # Looks unused, but it is not!
 
 from project.data import TrainingData
+from project.expansion import FakeExpander
 from project.helpers import one_hot_decode, one_hot_encode
 from project.laplotter import LossAccPlotter
 from project.vectorization.embedding import WordEmbedding
@@ -26,7 +27,7 @@ class GenericNetwork:
                 'train_data_percentage': 0.7,
                 }
 
-    def __init__(self, input_features_no, output_categories_no, **kwargs):
+    def __init__(self, input_features_no, output_categories_no, data_expander=None, **kwargs):
         kwargs.update({'input_features_no': input_features_no,
                        'output_categories_no': output_categories_no})
 
@@ -40,6 +41,7 @@ class GenericNetwork:
         self.validation_function = None
         self.glove = None
         self.best_parameters = None
+        self.data_expander = data_expander or FakeExpander()
 
     def __getattr__(self, item):
         if item in self.data['params']:
@@ -233,7 +235,9 @@ class GenericNetwork:
 
     def _questions_filter(self, sentence, **kwargs):
         # TODO augment, augment, augment
-        return self.glove.get_sentence_matrix(sentence, max_words=self.max_words_per_sentence, **kwargs)
+        sentence = self.glove.get_sentence_matrix(sentence, max_words=self.max_words_per_sentence, **kwargs)
+        expanded = self.data_expander.multi(sentence)
+        return expanded
 
     def _questions_mask_filter(self, sentence):
         return self._get_mask(self._questions_filter(sentence))
