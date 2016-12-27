@@ -7,49 +7,6 @@ import theano
 import warnings
 
 
-def load_questions_and_answers(filename):
-
-    qa = []
-
-    QUESTION_DELIMITER = 'Q: '
-    ANSWER_DELIMITER = 'A: '
-
-    with open(filename, 'rt') as f:
-
-        questions, answers = [], []
-
-        line_no = 0
-        for line in f.readlines():
-
-            line = line.rstrip('\n').strip()
-            line_no += 1
-
-            if line.startswith(QUESTION_DELIMITER):
-
-                question = line[len(QUESTION_DELIMITER)-1:].strip()
-                questions.append(question)
-
-            elif line.startswith(ANSWER_DELIMITER):
-
-                answer = line[len(ANSWER_DELIMITER)-1:].strip()
-                answers.append(answer)
-
-            elif not line:
-
-                if (questions and not answers) or (not questions and answers):
-                    raise ValueError("Group terminating at line %d has questions but no answers, or viceversa." % line_no)
-
-                if questions and answers:
-                    qa.append((questions, answers))
-
-                questions, answers = [], []
-
-            else:
-                raise ValueError("Error in line %d: '%s'." % (line_no, line))
-
-    return qa
-
-
 def get_all_questions_and_answers(qas):
     for questions, answers in qas:
         for q in questions:

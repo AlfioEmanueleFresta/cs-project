@@ -1,18 +1,45 @@
+import tempfile
 from unittest import TestCase
+
+from project.data import TrainingData
 
 
 class TestTrainingData(TestCase):
-    def test__add_answer(self):
-        self.fail()
-
-    def test__add_question(self):
-        self.fail()
-
-    def test__add_questions(self):
-        self.fail()
-
-    def test_get_answer(self):
-        self.fail()
 
     def test__load(self):
-        self.fail()
+
+        temp_filename = tempfile.mkstemp()[1]
+
+        example_input = [
+            "",
+            "# Ignore me",
+            "Q: Question-A",
+            "A: Answer-A1",
+            "# This is a comment",
+            "A: Answer-A2",
+            "A: Answer-A3",
+            "",
+            "",
+            "# Comment, once again",
+            "",
+            "Q: Question-B",
+            "# This is a comment",
+            "A: Answer-B1",
+            "A: Answer-B2",
+            "",
+        ]
+        example_input = "\n".join(example_input)
+
+        with open(temp_filename, "wt") as f:
+            f.write(example_input)
+
+        expected = [
+            ("Question-A", ("Answer-A1", "Answer-A2", "Answer-A3")),
+            ("Question-B", ("Answer-B1", "Answer-B2")),
+        ]
+
+        d = TrainingData(temp_filename)
+        for (obtained_question, obtained_answer_id), (expected_question, expected_answers) in zip(d, expected):
+            self.assertEqual(obtained_question, expected_question)
+            self.assertEqual(d.get_answer(obtained_answer_id), expected_answers)
+

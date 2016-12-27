@@ -9,8 +9,6 @@ class TrainingData:
         self.answers = OrderedSet([])
         self.questions = OrderedSet([])
         self._load()
-        self.questions_filter = lambda x: x
-        self.answers_filter = lambda x: x
 
     def _add_answer(self, answer_list):
         answer_list = tuple(answer_list)

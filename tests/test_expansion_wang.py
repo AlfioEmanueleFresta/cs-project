@@ -66,7 +66,6 @@ class TestWangExpander(TestCase):
         filtered = e._filter_combinations(center, combinations)
         filtered = list(filtered)
 
-        print(filtered)
         self.assertTrue(np.array_equal(np.array(filtered),
                                        np.array([far1, center, far2, borderline])))
 
