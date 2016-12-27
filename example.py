@@ -1,8 +1,7 @@
 import argparse
 
-import numpy as np
-
 from project.data import Dataset
+from project.expansion import WangExpander
 from project.network.lstm import LSTMNetwork
 from project.vectorization.embedding import WordEmbedding
 
@@ -25,10 +24,11 @@ t = Dataset('data/prepared/trec.txt.gz')
 network_class = LSTMNetwork
 n = network_class(input_features_no=g.vector_length,
                   output_categories_no=len(t.answers),
-                  max_words_per_sentence=100,
+                  max_words_per_sentence=200,
                   train_batch_size=250,
                   verbose=args.verbose,
-                  show_plot=args.display)
+                  show_plot=args.display,
+                  data_expander=WangExpander(3, 1.25))
 
 n.build_network()
 n.compile_functions()

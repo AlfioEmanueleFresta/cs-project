@@ -42,6 +42,7 @@ class GenericNetwork:
         self.glove = None
         self.best_parameters = None
         self.data_expander = data_expander or FakeExpander()
+        self.network = None
 
     def __getattr__(self, item):
         if item in self.data['params']:
@@ -203,8 +204,6 @@ class GenericNetwork:
         self.verbose and print("Saving model to file (%s)..." % model_filename, end=" ", flush=True)
         parameters = lasagne.layers.get_all_param_values(self.network)
         np.savez(model_filename, *parameters)
-        #with open(json_filename, 'wt') as f:
-        #    f.write(json.dumps(self.data))
         self.verbose and print("OK")
 
     def load_training_data(self, training_data):
@@ -234,10 +233,17 @@ class GenericNetwork:
         return questions, masks, answers
 
     def _questions_filter(self, sentence, **kwargs):
-        # TODO augment, augment, augment
-        sentence = self.glove.get_sentence_matrix(sentence, max_words=self.max_words_per_sentence, **kwargs)
+        # First, do a lookup for the WE vector
+        sentence = self.glove.get_sentence_matrix(sentence, **kwargs)
+
+        # Secondly, expand the sentence using the desired data expander
         expanded = self.data_expander.multi(sentence)
-        return expanded
+
+        # Thirdly, make sure the sentence is padded to `max_words_per_sentence` sentences
+        padded = np.tile(self.glove.empty_vector(), (self.max_words_per_sentence, 1))
+        padded[:expanded.shape[0]] = expanded
+
+        return padded
 
     def _questions_mask_filter(self, sentence):
         return self._get_mask(self._questions_filter(sentence))

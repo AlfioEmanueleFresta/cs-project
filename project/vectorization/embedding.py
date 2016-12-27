@@ -160,12 +160,9 @@ class WordEmbedding:
             return self.vectors[word]
         return None
 
-    def get_sentence_matrix(self, sentence, max_words,
+    def get_sentence_matrix(self, sentence,
                             show_workings=False,
                             synonyms_no=5):
-
-        # Create an empty matrix made of empty vectors, dimension (max_words, vector_size)
-        matrix = np.tile(self._empty_vector(), (max_words, 1))
 
         # Make all supported symbols their own word.
         for sym in self.SYM_CHARS:
@@ -176,9 +173,8 @@ class WordEmbedding:
         words.append(self.SYM_END)                        # Append the end character
         word_i = 0
 
-        if len(words) > max_words:
-            raise ValueError("The sentence has %d symbols and won't fit in a "
-                             "words vector of length %d." % (len(words), max_words))
+        # Create an empty matrix made of empty vectors, dimension (max_words, vector_size)
+        matrix = np.tile(self.empty_vector(), (len(words), 1))
 
         for word in words:
             vector = self.get_word_vector(word)
@@ -201,11 +197,11 @@ class WordEmbedding:
 
         return matrix
 
-    def _empty_vector(self):
+    def empty_vector(self):
         return self.get_word_vector(self.SYM_EMPTY)
 
     def matrix_to_words(self, matrix, try_to_clean=True):
-        to_remove = self.get_closest_word(self._empty_vector()) if try_to_clean else '**'
+        to_remove = self.get_closest_word(self.empty_vector()) if try_to_clean else '**'
         for vector in matrix:
             word = self.get_closest_word(vector)
             if word != to_remove:

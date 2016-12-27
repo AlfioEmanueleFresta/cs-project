@@ -4,6 +4,10 @@ from .generic import GenericNetwork
 
 
 class LSTMNetwork(GenericNetwork):
+    """
+    A Long Short-Term Memory Neural Network. Based on one or more
+    LSTM layer(s), plus one or more MLP final layer(s).
+    """
 
     def defaults(self):
         defaults = super(LSTMNetwork, self).defaults()
@@ -51,22 +55,16 @@ class LSTMNetwork(GenericNetwork):
 
         super(LSTMNetwork, self).__init__(**kwargs)
 
-    def build_network(self, input_var=None, input_shape=None,
-                            mask_var=None, mask_shape=None):
+    def build_network(self):
         # Building the neural network
         #########################################################
 
-        # TODO Implement number of LSTM and Dense Layers options -- these are currently ignored.
-
         # Input and mask layer
+        input_shape = (None, self.max_words_per_sentence, self.input_features_no)
+        mask_shape = (None, self.max_words_per_sentence)
 
-        # TODO first dimension can be self.train_batch_size, but can't feed fewer data points.
-        #      this means that the last mini batch, if not 'full', can't be fed into the network.
-        input_shape = input_shape or (None, self.max_words_per_sentence, self.input_features_no)
-        mask_shape = mask_shape or (None, self.max_words_per_sentence)
-
-        l_in = lasagne.layers.InputLayer(shape=input_shape, input_var=input_var or self.input_var)
-        l_mask = lasagne.layers.InputLayer(shape=mask_shape, input_var=mask_var or self.mask_var)
+        l_in = lasagne.layers.InputLayer(shape=input_shape, input_var=self.input_var)
+        l_mask = lasagne.layers.InputLayer(shape=mask_shape, input_var=self.mask_var)
 
         l_forward = l_in
         for i in range(self.lstm_layers):
@@ -89,5 +87,5 @@ class LSTMNetwork(GenericNetwork):
                                           nonlinearity=self.output_layer_activation,
                                           W=self.dense_layers_w())
 
-        #l_out = lasagne.layers.ReshapeLayer(l_out, shape=(-1, -1))
+        # l_out = lasagne.layers.ReshapeLayer(l_out, shape=(-1, -1))
         self.network = l_out
