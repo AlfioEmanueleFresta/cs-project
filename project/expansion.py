@@ -2,12 +2,16 @@ import numpy as np
 
 
 class Expander:
+    """
+    Represents an abstract expansion method.
+    """
 
     def next(self, item):
         """
-        A method which takes a single line and returns 0-N expanded lines.
-        If the original line is to be kept, it needs to be returned as well.
-        :param item: The original line.
+        A method which takes a single vector and returns 0-N vectors,
+        in the form of a numpy array of shape (NxS), where S is the shape of the original vector.
+        If the original vector is to be kept, it needs to be returned as well.
+        :param item: The original vector.
         :return:
         """
         raise NotImplementedError
@@ -21,7 +25,8 @@ class Expander:
 
 class FakeExpander(Expander):
     """
-    This is a fake expander -- which does not expand the input provided.
+    This is a fake expander -- which does not expand the input provided,
+    it simply returns what it is fed.
     """
 
     def next(self, item):
@@ -33,13 +38,21 @@ class WangExpander(Expander):
     An expander based on the work by Wang P. in "Semantic expansion using word
     embedding clustering and convolutional neural network for improving short text
     classification".
+
+    It returns all vectors fed as input, plus all combinations of the last 2..N words,
+    where N is specified at initialisation.
+
+    All vector combinations are merged into individual vectors using component-wise addition.
+
+    Finally, merged vectors combinations that are closer than `distance` from the original vector
+    are ignored and not returned.
     """
 
     def __init__(self, n, distance):
         """
         Initialise the expander.
         :param n: The maximum number of consecutive words to try and match.
-        :param distance: The minimum distance to keep the expansion.
+        :param distance: The minimum distance to keep the expansion vector.
         """
         self.n = n
         self.distance = distance
@@ -59,7 +72,7 @@ class WangExpander(Expander):
         self.history = self.history[-self.n:]
 
         o = self._get_combinations()
-        o = self._combine_combinations(o)
+        o = self._merge_combinations(o)
         o = self._filter_combinations(item, o)
         o = np.array(list(o), dtype=np.float32)
 
@@ -69,7 +82,7 @@ class WangExpander(Expander):
         for i in range(min(self.n, len(self.history))):
             yield self.history[-(i + 1):]
 
-    def _combine_combinations(self, combinations):
+    def _merge_combinations(self, combinations):
         for combination in combinations:
             yield np.sum(combination, axis=0)
 

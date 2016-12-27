@@ -2,7 +2,7 @@ import argparse
 
 import numpy as np
 
-from project.data import TrainingData
+from project.data import Dataset
 from project.network.lstm import LSTMNetwork
 from project.vectorization.embedding import WordEmbedding
 
@@ -20,7 +20,7 @@ g = WordEmbedding('data/embeddings/glove.6B.50d.txt',
                   verbose=args.verbose, use_cache=True,
                   compute_clusters=True)
 
-t = TrainingData('data/prepared/trec.txt.gz')
+t = Dataset('data/prepared/trec.txt.gz')
 
 network_class = LSTMNetwork
 n = network_class(input_features_no=g.vector_length,

@@ -2,9 +2,30 @@ from ordered_set import OrderedSet
 import gzip
 
 
-class TrainingData:
+class Dataset:
+    """
+    Represent an data set.
+    """
 
     def __init__(self, filename):
+        """
+        Load a data set from a file.
+
+        A file is a number of blocks separated by white lines.
+        Each block will contain one or more questions, followed by one or more possible answers.
+        The file can contain comments that will be ignored during parsing.
+
+        Question lines start with   'Q: '
+        Answer lines start with     'A: '
+        Comment lines start with    '# '
+
+        New lines must be in the UNIX format -- ie. "\n" only.
+
+        If the name of the file to read ends in .gz, it will be decompressed using gzip.
+        Otherwise it will be read as a UTF-8 encoded text file.
+
+        :param filename: A text filename.
+        """
         self.filename = filename
         self.answers = OrderedSet([])
         self.questions = OrderedSet([])
@@ -21,6 +42,12 @@ class TrainingData:
         return [self._add_question(question, answer_id) for question in questions]
 
     def get_answer(self, answer_id):
+        """
+        Get the answer set for a given answer ID.
+
+        :param answer_id: A numeric ID.
+        :return: A tuple containing alternative answers for the question.
+        """
         return self.answers[answer_id]
 
     def _load(self):

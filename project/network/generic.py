@@ -6,7 +6,7 @@ import time
 import json
 import readline  # Looks unused, but it is not!
 
-from project.data import TrainingData
+from project.data import Dataset
 from project.expansion import FakeExpander
 from project.helpers import one_hot_decode, one_hot_encode
 from project.laplotter import LossAccPlotter

@@ -48,7 +48,7 @@ class TestWangExpander(TestCase):
     def test__combine_combinations(self):
         e = WangExpander(3, 0)
         combinations = [[10], [5, 10], [2, 5, 10]]
-        combined = e._combine_combinations(combinations)
+        combined = e._merge_combinations(combinations)
         combined = list(combined)
         self.assertEqual(combined, [10, 15, 17])
 

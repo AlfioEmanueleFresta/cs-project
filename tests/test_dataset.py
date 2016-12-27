@@ -1,7 +1,7 @@
 import tempfile
 from unittest import TestCase
 
-from project.data import TrainingData
+from project.data import Dataset
 
 
 class TestTrainingData(TestCase):
@@ -13,7 +13,8 @@ class TestTrainingData(TestCase):
         example_input = [
             "",
             "# Ignore me",
-            "Q: Question-A",
+            "Q: Question-A1",
+            "Q: Question-A2",
             "A: Answer-A1",
             "# This is a comment",
             "A: Answer-A2",
@@ -34,11 +35,12 @@ class TestTrainingData(TestCase):
             f.write(example_input)
 
         expected = [
-            ("Question-A", ("Answer-A1", "Answer-A2", "Answer-A3")),
+            ("Question-A1", ("Answer-A1", "Answer-A2", "Answer-A3")),
+            ("Question-A2", ("Answer-A1", "Answer-A2", "Answer-A3")),
             ("Question-B", ("Answer-B1", "Answer-B2")),
         ]
 
-        d = TrainingData(temp_filename)
+        d = Dataset(temp_filename)
         for (obtained_question, obtained_answer_id), (expected_question, expected_answers) in zip(d, expected):
             self.assertEqual(obtained_question, expected_question)
             self.assertEqual(d.get_answer(obtained_answer_id), expected_answers)

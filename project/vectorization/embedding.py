@@ -2,7 +2,7 @@ import gzip
 from annoy import AnnoyIndex
 import os
 import numpy as np
-from project.helpers import kmeans, klp_kmeans
+from project.helpers import kmeans
 
 
 class WordEmbedding:
