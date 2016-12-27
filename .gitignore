@@ -4,6 +4,10 @@
 data/*cache
 data/*txt
 data/*gz
+data/embeddings/*gz
+data/embeddings/*txt
+data/embeddings/*bz2
+data/raw/*xml
 
 # Uncompressed embeddings and cache
 data/embeddings/*.txt
