@@ -1,5 +1,7 @@
 import argparse
 
+import numpy as np
+
 from project.data import TrainingData
 from project.network.lstm import LSTMNetwork
 from project.vectorization.embedding import WordEmbedding
