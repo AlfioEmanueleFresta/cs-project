@@ -19,16 +19,19 @@ g = WordEmbedding('data/embeddings/glove.6B.50d.txt',
                   verbose=args.verbose, use_cache=True,
                   compute_clusters=True)
 
-t = Dataset('data/prepared/trec.txt.gz')
+#t = Dataset('data/prepared/trec.txt.gz')
+t = Dataset(word_embedding=g,
+            filename='data/prepared/openday.txt')
 
 network_class = LSTMNetwork
 n = network_class(input_features_no=g.vector_length,
                   output_categories_no=len(t.answers),
                   max_words_per_sentence=200,
-                  train_batch_size=250,
+                  train_batch_size=1,
                   verbose=args.verbose,
                   show_plot=args.display,
-                  data_expander=WangExpander(n=3, distance=1.25, word_embedding=g))
+                  train_batch_no=100,
+                  data_expander=WangExpander(n=4, distance=0, word_embedding=g))
 
 n.build_network()
 n.compile_functions()
@@ -49,3 +52,30 @@ if args.train:
 
 
 n.interactive_predict()
+
+
+
+## What do we want to do
+# - Load the dataset with N samples
+# - Shuffle the dataset, to randomise the location of the sentences
+# - Split the dataset into training, validation and test sets
+# - Once the dataset has been split into groups, extend each sentence of the groups,
+#     de facto triplicating, or more, the size of each of the groups
+# - See if the improvement has any correlation to the original size of the dataset
+
+
+
+## To DO
+# At the moment the expansion works by generating for each sentence N new sentences. Instead, it should generate
+# a single additional sentence. I.e.
+# f(A B C D, N=2) => (A B C D, A B AB C BC ABC).
+
+# Additionally, need to investigate the effect of using the expanded sentence in validation and testing groups.
+# - The expanded sentence should *NOT* be used in the latter two as this may skew the validation.
+
+# During prediction, should it utilise only the original or only the expanded sentence?
+
+# Also -- adapt method of distance calculation to discard stupid tuples.
+
+# Further work new idea. The expansion should do something more intelligent, such as exploit
+#  the syntax tree of the input sentence to pair words in a more meaningful manner.

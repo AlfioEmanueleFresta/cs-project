@@ -1,0 +1,12 @@
+Q: A B C D
+A: A
+
+Q: B C D E
+A: B
+
+Q: C D E F
+A: C
+
+Q: D E F G
+A: D
+

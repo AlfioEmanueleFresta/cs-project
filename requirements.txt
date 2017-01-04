@@ -6,3 +6,4 @@ ordered-set
 tabulate
 matplotlib
 cairocffi
+pandas

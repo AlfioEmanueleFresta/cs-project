@@ -42,3 +42,31 @@ def kmeans(X, clusters_no, epochs=500, learning_rate=0.01,
             print(" k-means, epoch=%d/%d, cost=%f" % (epoch, epochs, D.min(0).sum()))
     return W
 
+
+def shuffle(l):
+    """
+    Return a shuffled copy of a Python list.
+    :param l: A list to shuffle.
+    :return: A copy of the list in random order.
+    """
+    length = len(l)
+    indices = np.array(range(length))
+    np.random.shuffle(indices)
+    output = []
+    for i in indices:
+        output.append(l[i])
+    return output
+
+
+def split(l, a_percentage):
+    """
+    Split a list into two lists A, B of given ratio.
+    :param l: The list to split.
+    :param a_percentage: The percentage of items to go in A.
+    :return: A tuple (A, B).
+    """
+    assert a_percentage >= 0
+    assert a_percentage <= 1
+    all_no = len(l)
+    a_no = int(all_no * a_percentage)
+    return l[0:a_no], l[a_no:]

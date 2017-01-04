@@ -160,9 +160,7 @@ class WordEmbedding:
             return self.vectors[word]
         return None
 
-    def get_sentence_matrix(self, sentence,
-                            show_workings=False,
-                            synonyms_no=5):
+    def split_sentence_into_words(self, sentence):
 
         # Make all supported symbols their own word.
         for sym in self.SYM_CHARS:
@@ -170,7 +168,15 @@ class WordEmbedding:
 
         words = sentence.split(' ')                       # Split by space character
         words = [word.strip() for word in words if word]  # Remove excess spacing
-        words.append(self.SYM_END)                        # Append the end character
+        # words.append(self.SYM_END)                        # Append the end character
+
+        return words
+
+    def get_sentence_matrix(self, sentence,
+                            show_workings=False,
+                            synonyms_no=5):
+
+        words = self.split_sentence_into_words(sentence)
         word_i = 0
 
         # Create an empty matrix made of empty vectors, dimension (max_words, vector_size)
