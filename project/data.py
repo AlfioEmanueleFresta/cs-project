@@ -116,12 +116,19 @@ class Dataset:
         for question, answer_id in self.questions:
             yield self._process_question(question), answer_id
 
-    def _augment_group_with_alternative_questions(self, group):
+    #def _augment_group_with_alternative_questions(self, group):
+    #    for question, answer_id in group:
+    #        print(">", question, answer_id)
+    #        for alternative_question in self.augmenter.next(question):
+    #            print(" ", alternative_question, answer_id)
+    #            yield alternative_question, answer_id
+
+    def _augment_questions_in_group(self, group):
         for question, answer_id in group:
-            print(">", question, answer_id)
-            for alternative_question in self.augmenter.next(question):
-                print(" ", alternative_question, answer_id)
-                yield alternative_question, answer_id
+            print(":", question, answer_id)
+            alternative_question = self.augmenter.next(question)
+            print(" ", alternative_question, answer_id)
+            yield alternative_question, answer_id
 
     def _replace_words_with_vectors(self, group):
         for question, answer_id in group:
@@ -148,7 +155,7 @@ class Dataset:
 
     def get_prepared_data(self,
                           train_data_percentage,
-                          max_sentence_size=50,
+                          max_sentence_size=200,
                           do_shuffle=True):
         """
         Shuffle and split data into training, validation and test sets.
@@ -164,9 +171,9 @@ class Dataset:
         training, validation_and_test = split(questions, train_data_percentage)
         validation, test = split(validation_and_test, .5)
 
-        training, validation, test = self._augment_group_with_alternative_questions(training), \
-                                     self._augment_group_with_alternative_questions(validation), \
-                                     self._augment_group_with_alternative_questions(test)
+        training, validation, test = self._augment_questions_in_group(training), \
+                                     self._augment_questions_in_group(validation), \
+                                     self._augment_questions_in_group(test)
 
         training, validation, test = self._replace_words_with_vectors(training), \
                                      self._replace_words_with_vectors(validation), \

@@ -56,11 +56,11 @@ n.interactive_predict()
 
 
 ## What do we want to do
-# - Load the dataset with N samples
-# - Shuffle the dataset, to randomise the location of the sentences
-# - Split the dataset into training, validation and test sets
-# - Once the dataset has been split into groups, extend each sentence of the groups,
-#     de facto triplicating, or more, the size of each of the groups
+# [ ] Load the dataset with N samples
+# [X] Shuffle the dataset, to randomise the location of the sentences
+# [X] Split the dataset into training, validation and test sets
+# [X] Once the dataset has been split into groups, extend each sentence of the groups,
+#       de facto triplicating, or more, the size of each of the groups
 # - See if the improvement has any correlation to the original size of the dataset
 
 

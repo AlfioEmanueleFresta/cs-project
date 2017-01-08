@@ -33,15 +33,12 @@ class CombinerAugmenter(Augmenter):
 
     def next(self, sentence):
 
-        augmented_sentences = []
-
-        for window_size in range(self.max_window_size):
-            augmented_sentence = []
-            history = []
-            for word in sentence:
-                history.append(word)
+        augmented_sentence = []
+        history = []
+        for word in sentence:
+            history.append(word)
+            for window_size in range(0, min(len(history), self.max_window_size)):
                 t = tuple(history[-(window_size + 1):])
                 augmented_sentence.append(t)
-            augmented_sentences.append(augmented_sentence)
 
-        return augmented_sentences
+        return augmented_sentence
