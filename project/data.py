@@ -4,7 +4,7 @@ import gzip
 import numpy as np
 
 from project.augmentation import FakeAugmenter
-from project.helpers import shuffle, split
+from project.helpers import shuffle, split, one_hot_encode
 
 
 class Dataset:
@@ -145,6 +145,13 @@ class Dataset:
                         for vectors_tuple in question]
             yield question, answer_id
 
+    def _one_hot_answers(self, group, output_categories_no):
+        for question, answer_id in group:
+            assert answer_id < output_categories_no  # output_categories_no too small
+            answer = one_hot_encode(i=answer_id, n=output_categories_no,
+                                    positive=1.0, negative=0.0)
+            yield question, answer
+
     def _make_sentence_matrices(self, group, max_sentence_size):
         for question, answer_id in group:
             question_matrix = np.tile(self.word_embedding.empty_vector(), (max_sentence_size or len(question), 1))
@@ -155,6 +162,7 @@ class Dataset:
 
     def get_prepared_data(self,
                           train_data_percentage,
+                          output_categories_no=None,
                           max_sentence_size=200,
                           do_shuffle=True):
         """
@@ -164,6 +172,10 @@ class Dataset:
 
         questions = self._get_prepared_questions()
         questions = list(questions)
+
+        output_categories_no = output_categories_no or len(self.answers)
+        if output_categories_no < len(self.answers):
+            raise ValueError("`output_categories_no` chosen is too small for the dataset provided.")
 
         if do_shuffle:
             questions = shuffle(questions)
@@ -186,6 +198,10 @@ class Dataset:
         training, validation, test = self._make_sentence_matrices(training, max_sentence_size=max_sentence_size), \
                                      self._make_sentence_matrices(validation, max_sentence_size=max_sentence_size), \
                                      self._make_sentence_matrices(test, max_sentence_size=max_sentence_size)
+
+        training, validation, test = self._one_hot_answers(training, output_categories_no), \
+                                     self._one_hot_answers(validation, output_categories_no), \
+                                     self._one_hot_answers(test, output_categories_no)
 
         return training, validation, test
 
