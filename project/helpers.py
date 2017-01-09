@@ -104,11 +104,14 @@ class CachedBatchIterator(ResettableIterator):
         self.i = 0
 
     def __next__(self):
+        if self.i >= self.data.shape[0] / self.batch_size:
+            raise StopIteration
+
         start = self.i * self.batch_size
         end = min(start + self.batch_size, self.data.shape[0])
-        if end - start == 0:
-            raise StopIteration
+
         batch = self.data[start:end]
         self.i += 1
+
         return batch
 
