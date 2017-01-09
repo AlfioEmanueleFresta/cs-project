@@ -149,7 +149,7 @@ class WordEmbedding:
 
         return word
 
-    def get_word_vector(self, word):
+    def get_word_vector(self, word, verbose=False):
         """
         Gets the vector for a given word, if existent.
         :param word: The word.
@@ -157,7 +157,17 @@ class WordEmbedding:
         """
         word = self.prepare_word(word, building=False)
         if word in self.vectors:
-            return self.vectors[word]
+            vector = self.vectors[word]
+            if verbose:
+                similar = self.get_closest_words(vector, n=4)
+                similar = " ".join(similar)
+                print("%s {%s}" % (word, similar), end=" ", flush=True)
+
+            return vector
+
+        elif verbose:
+            print("[!%s]" % word, end=" ", flush=True)
+
         return None
 
     def split_sentence_into_words(self, sentence):

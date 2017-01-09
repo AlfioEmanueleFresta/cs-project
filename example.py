@@ -1,6 +1,7 @@
 import argparse
 
-from project.data import Dataset
+from project.augmentation import FakeAugmenter
+from project.data import Dataset, FileDataset
 from project.expansion import WangExpander
 from project.network.lstm import LSTMNetwork
 from project.vectorization.embedding import WordEmbedding
@@ -20,18 +21,18 @@ g = WordEmbedding('data/embeddings/glove.6B.50d.txt',
                   compute_clusters=True)
 
 #t = Dataset('data/prepared/trec.txt.gz')
-t = Dataset(word_embedding=g,
-            filename='data/prepared/openday.txt')
+t = FileDataset(word_embedding=g,
+                filename='data/prepared/trec.txt.gz',
+                augmenter=FakeAugmenter())
 
 network_class = LSTMNetwork
 n = network_class(input_features_no=g.vector_length,
                   output_categories_no=len(t.answers),
-                  max_words_per_sentence=200,
-                  train_batch_size=1,
+                  max_words_per_sentence=100,
+                  train_batch_size=1000,
                   verbose=args.verbose,
                   show_plot=args.display,
-                  train_batch_no=100,
-                  data_expander=WangExpander(n=4, distance=0, word_embedding=g))
+                  train_max_epoch=300)
 
 n.build_network()
 n.compile_functions()

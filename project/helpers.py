@@ -152,3 +152,37 @@ class CachedTupleBatchIterator(ResettableIterator):
 
         return batch
 
+
+class CachedTupleGeneratorbatchIterator(ResettableIterator):
+    """
+    >>> from project.helpers import CachedTupleGeneratorbatchIterator
+    >>> def generator():
+    >>>   for i in range(10):
+    >>>     yield i, i, i
+    >>>
+    >>> i = CachedTupleGeneratorbatchIterator(generator, 5)
+    >>> i.__next__()
+    (1, 1, 1)
+    """
+    def __init__(self, generator, batch_size):
+        assert batch_size > 0
+        self.i = 0
+        self.batch_size = batch_size
+        self.data = tuple(np.array(x) for x in zip(*generator))
+
+
+    def reset(self):
+        self.i = 0
+
+    def __next__(self):
+        if self.i >= self.data[0].shape[0] / self.batch_size:
+            raise StopIteration
+
+        start = self.i * self.batch_size
+        end = min(start + self.batch_size, self.data[0].shape[0])
+
+        batch = tuple(t[start:end] for t in self.data)
+        self.i += 1
+
+        return batch
+

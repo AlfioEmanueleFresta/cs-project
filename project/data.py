@@ -58,47 +58,7 @@ class Dataset:
         return self.answers[answer_id]
 
     def _load(self):
-        question_delimiter = 'Q: '
-        answer_delimiter = 'A: '
-        comment_delimiter = '#'
-
-        open_function = gzip.open if '.gz' in self.filename else open
-        with open_function(self.filename, 'rt', encoding='utf-8') as f:
-            questions, answers = [], []
-
-            line_no = 0
-            for line in f.readlines():
-                line = line.rstrip('\n').strip()
-                line_no += 1
-
-                if line.startswith(question_delimiter):
-                    question = line[len(question_delimiter) - 1:].strip()
-                    questions.append(question)
-
-                elif line.startswith(answer_delimiter):
-                    answer = line[len(answer_delimiter) - 1:].strip()
-                    answers.append(answer)
-
-                elif line.startswith(comment_delimiter):
-                    continue
-
-                elif not line:
-                    if (questions and not answers) or (not questions and answers):
-                        raise ValueError("Group terminating at line %d has questions "
-                                         "but no answers, or vice versa." % line_no)
-
-                    if questions and answers:
-                        answer_id = self._add_answer(answers)
-                        self._add_questions(questions, answer_id)
-
-                    questions, answers = [], []
-
-                else:
-                    raise ValueError("Error in line %d: '%s'." % (line_no, line))
-
-        if questions and answers:
-            answer_id = self._add_answer(answers)
-            self._add_questions(questions, answer_id)
+        raise NotImplementedError
 
     def __iter__(self):
         for question, answer_id in self.questions:
@@ -125,15 +85,16 @@ class Dataset:
 
     def _augment_questions_in_group(self, group):
         for question, answer_id in group:
-            print(":", question, answer_id)
+            self.verbose and print("> ORIG", question, answer_id)
             alternative_question = self.augmenter.next(question)
-            print(" ", alternative_question, answer_id)
+            self.verbose and print("  EXPA", alternative_question, answer_id)
             yield alternative_question, answer_id
 
     def _replace_words_with_vectors(self, group):
         for question, answer_id in group:
+            self.verbose and print("  WOEM", end=" ")
             question = [tuple(self.word_embedding.get_word_vector(word) for word in words_tuple
-                              if self.word_embedding.get_word_vector(word) is not None,)
+                              if self.word_embedding.get_word_vector(word, verbose=self.verbose) is not None,)
                         for words_tuple in question]
             question = [t for t in question if t]  # Remove (,) tuples
             yield question, answer_id
@@ -150,6 +111,7 @@ class Dataset:
             assert answer_id < output_categories_no  # output_categories_no too small
             answer = one_hot_encode(i=answer_id, n=output_categories_no,
                                     positive=1.0, negative=0.0)
+            answer = np.array(answer)
             yield question, answer
 
     def _make_sentence_matrices(self, group, max_sentence_size):
@@ -158,13 +120,30 @@ class Dataset:
             assert len(question) <= question_matrix.shape[0]  # otherwise, max_sentence_size is too little.
             for i, vector in enumerate(question):
                 question_matrix[i] = vector
+            self.verbose and print("  MATR", question_matrix.shape)
             yield question_matrix, answer_id
+
+    def _get_mask_for_question_and_answer(self, question, answer):
+        mask = np.zeros((question.shape[0],))
+        i = 0
+        for element in question:
+            mask[i] = 1
+            if np.array_equal(element, self.word_embedding.vectors[self.word_embedding.SYM_END]):
+                break
+            i += 1
+        return mask
+
+    def _insert_mask_in_tuple(self, group):
+        for question, answer in group:
+            new_tuple = question, self._get_mask_for_question_and_answer(question, answer), answer
+            yield new_tuple
 
     def get_prepared_data(self,
                           train_data_percentage,
                           output_categories_no=None,
                           max_sentence_size=200,
-                          do_shuffle=True):
+                          train_data_shuffle=True,
+                          verbose=False):
         """
         Shuffle and split data into training, validation and test sets.
         :return:
@@ -177,11 +156,13 @@ class Dataset:
         if output_categories_no < len(self.answers):
             raise ValueError("`output_categories_no` chosen is too small for the dataset provided.")
 
-        if do_shuffle:
+        if train_data_shuffle:
             questions = shuffle(questions)
 
         training, validation_and_test = split(questions, train_data_percentage)
         validation, test = split(validation_and_test, .5)
+
+        self.verbose = verbose
 
         training, validation, test = self._augment_questions_in_group(training), \
                                      self._augment_questions_in_group(validation), \
@@ -203,5 +184,69 @@ class Dataset:
                                      self._one_hot_answers(validation, output_categories_no), \
                                      self._one_hot_answers(test, output_categories_no)
 
+        training, validation, test = self._insert_mask_in_tuple(training), \
+                                     self._insert_mask_in_tuple(validation), \
+                                     self._insert_mask_in_tuple(test)
+
         return training, validation, test
 
+
+class FileDataset(Dataset):
+
+    def _load(self):
+
+        open_function = gzip.open if '.gz' in self.filename else open
+        with open_function(self.filename, 'rt', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        self._load_from_lines(lines)
+
+
+    def _load_from_lines(self, lines):
+
+        question_delimiter = 'Q: '
+        answer_delimiter = 'A: '
+        comment_delimiter = '#'
+
+        questions, answers = [], []
+        line_no = 0
+        for line in lines:
+            line = line.rstrip('\n').strip()
+            line_no += 1
+
+            if line.startswith(question_delimiter):
+                question = line[len(question_delimiter) - 1:].strip()
+                questions.append(question)
+
+            elif line.startswith(answer_delimiter):
+                answer = line[len(answer_delimiter) - 1:].strip()
+                answers.append(answer)
+
+            elif line.startswith(comment_delimiter):
+                continue
+
+            elif not line:
+                if (questions and not answers) or (not questions and answers):
+                    raise ValueError("Group terminating at line %d has questions "
+                                     "but no answers, or vice versa." % line_no)
+
+                if questions and answers:
+                    answer_id = self._add_answer(answers)
+                    self._add_questions(questions, answer_id)
+
+                questions, answers = [], []
+
+            else:
+                raise ValueError("Error in line %d: '%s'." % (line_no, line))
+
+
+        if questions and answers:
+            answer_id = self._add_answer(answers)
+            self._add_questions(questions, answer_id)
+
+
+class MemoryDataset(FileDataset):
+
+    def _load(self):
+        lines = self.filename.split("\n")
+        self._load_from_lines(lines)

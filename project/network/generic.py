@@ -3,12 +3,9 @@ import theano.tensor as T
 import theano
 import numpy as np
 import time
-import json
-import readline  # Looks unused, but it is not!
 
-from project.data import Dataset
-from project.expansion import FakeExpander
-from project.helpers import one_hot_decode, one_hot_encode
+from project.data import MemoryDataset
+from project.helpers import one_hot_decode, CachedTupleGeneratorbatchIterator
 from project.laplotter import LossAccPlotter
 from project.vectorization.embedding import WordEmbedding
 
@@ -27,7 +24,7 @@ class GenericNetwork:
                 'train_data_percentage': 0.7,
                 }
 
-    def __init__(self, input_features_no, output_categories_no, data_expander=None, **kwargs):
+    def __init__(self, input_features_no, output_categories_no, **kwargs):
         kwargs.update({'input_features_no': input_features_no,
                        'output_categories_no': output_categories_no})
 
@@ -41,7 +38,6 @@ class GenericNetwork:
         self.validation_function = None
         self.glove = None
         self.best_parameters = None
-        self.data_expander = data_expander or FakeExpander()
         self.network = None
 
     def __getattr__(self, item):
@@ -95,11 +91,19 @@ class GenericNetwork:
         val_fn = self.validation_function
         pred_fn = self.prediction_function
 
-        questions_and_answers = self.get_prepared_training_data()
+        questions_and_answers = self.training_data.get_prepared_data(train_data_percentage=self.train_data_percentage,
+                                                                     train_data_shuffle=self.train_data_shuffle,
+                                                                     max_sentence_size=self.max_words_per_sentence)
+
+        self.verbose and print("Generating training, validation and testing dataset...")
+
+        train, val, test = questions_and_answers
+        train, val, test = CachedTupleGeneratorbatchIterator(train, batch_size=self.train_batch_size), \
+                           CachedTupleGeneratorbatchIterator(val, batch_size=self.train_batch_size), \
+                           CachedTupleGeneratorbatchIterator(test, batch_size=self.train_batch_size)
+
         self.verbose and print("Starting training. You can use CTRL-C "
                                "to stop the training process.")
-
-        train, val, test = self._get_split_data(questions_and_answers)
 
         self.verbose and print("Epoch      Time        Tr. loss   Val. loss  Val. acc.   B  Best acc. ")
         self.verbose and print("---------  ----------  ---------  ---------  ----------  -  ----------")
@@ -116,10 +120,14 @@ class GenericNetwork:
             # TODO max_epochs should be used as upper bound -- intelligent early termination.
             for epoch in range(self.train_max_epochs):
 
+                train.reset()
+                val.reset()
+                test.reset()
+
                 train_err, train_acc, train_batches = 0, 0, 0
                 start_time = time.time()
 
-                for batch in self._iterate_minibatches(train):
+                for batch in train:
                     inputs, mask, targets = batch
                     err,  acc = train_fn(inputs, mask, targets)
                     train_err += err
@@ -127,7 +135,7 @@ class GenericNetwork:
                     train_batches += 1
 
                 val_err, val_batches, val_acc = 0, 0, 0
-                for batch in self._iterate_minibatches(val):
+                for batch in val:
                     inputs, mask, targets = batch
                     pred, err, acc = val_fn(inputs, mask, targets)
                     val_err += err
@@ -160,7 +168,8 @@ class GenericNetwork:
                                        loss_train=train_loss,
                                        acc_train=train_acc,
                                        loss_val=val_loss,
-                                       acc_val=val_acc)
+                                       acc_val=val_acc,
+                                       redraw=not epoch % 5)
 
         except KeyboardInterrupt:
             print("Training interrupted at epoch %d." % epoch)
@@ -178,10 +187,12 @@ class GenericNetwork:
 
         self.verbose and print("Testing network...", end=" ", flush=True)
 
+        test_data.reset()
+
         try:
             val_fn = self.validation_function
             test_err, test_acc, test_batches = 0, 0, 0
-            for batch in self._iterate_minibatches(test_data):
+            for batch in test_data:
                 inputs, mask, targets = batch
                 _, err, acc = val_fn(inputs, mask, targets)
                 test_err += err
@@ -215,107 +226,6 @@ class GenericNetwork:
                              "'output_categories_no' which is %d." % (len(self.training_data.answers),
                                                                       self.output_categories_no))
 
-    def get_prepared_training_data(self):
-        # Note: This is not a generator on purpose (as you want to pre-process!)
-        questions, masks, answers = [], [], []
-        self.verbose and print("Preparing training data...", end=" ", flush=True)
-
-        for question, answer_id in self.training_data.questions:
-            questions.append(self._questions_filter(question))
-            masks.append(self._questions_mask_filter(question))
-            answers.append(self._answers_filter(answer_id))
-
-        questions, masks, answers = np.array(questions), np.array(masks), np.array(answers)
-        self.verbose and print("OK")
-
-        assert questions.shape[0] == masks.shape[0]
-        assert questions.shape[0] == answers.shape[0]
-        return questions, masks, answers
-
-    def _questions_filter(self, sentence, **kwargs):
-        # First, do a lookup for the WE vector
-        sentence = self.glove.get_sentence_matrix(sentence, **kwargs)
-
-        # Secondly, expand the sentence using the desired data expander
-        expanded = self.data_expander.multi(sentence)
-
-        # Thirdly, make sure the sentence is padded to `max_words_per_sentence` sentences
-        padded = np.tile(self.glove.empty_vector(), (self.max_words_per_sentence, 1))
-        padded[:expanded.shape[0]] = expanded
-
-        return padded
-
-    def _questions_mask_filter(self, sentence):
-        return self._get_mask(self._questions_filter(sentence))
-
-    def _answers_filter(self, answer_id):
-        return one_hot_encode(n=self.output_categories_no, i=answer_id,
-                              positive=1.0, negative=0.0)  # Force float
-
-    def _iterate_minibatches(self, questions_and_answers,
-                             include_mask=False):
-        questions, masks, answers = questions_and_answers
-        while True:
-            assert questions.shape[0] == answers.shape[0]
-
-            this_batch_size = min(self.train_batch_size, questions.shape[0])
-
-            if not this_batch_size:
-                break
-
-            these_questions, these_masks, these_answers = questions[:this_batch_size], masks[:this_batch_size], answers[:this_batch_size]
-            questions, masks, answers = questions[this_batch_size:], masks[this_batch_size:], answers[this_batch_size:]
-
-            assert these_questions.shape[0] == these_answers.shape[0]
-            assert these_questions.shape[0] == these_masks.shape[0]
-            assert these_questions.shape[0] <= self.train_batch_size
-
-            if self.include_mask:
-                yield these_questions, these_masks, these_answers
-
-            else:
-                yield these_questions, these_answers
-
-    def _get_mask(self, vector):
-        assert vector.shape == (self.max_words_per_sentence, self.glove.vector_length)
-        mask = np.zeros((self.max_words_per_sentence,))
-        i = 0
-        for element in vector:
-            mask[i] = 1
-            if np.array_equal(element, self.glove.vectors[self.glove.SYM_END]):
-                break
-            i += 1
-        return mask
-
-    def _get_split_data(self, tuples):
-
-        questions, masks, answers = tuples
-
-        if self.train_data_percentage <= 0 or self.train_data_percentage > 1:
-            raise ValueError("train_percentage need to be between 0 and 1.")
-
-        if self.train_data_shuffle:
-            indices = np.array(range(questions.shape[0]))
-            np.random.shuffle(indices)
-            questions, masks, answers = questions[indices], masks[indices], answers[indices]
-
-        all_questions_no = questions.shape[0]
-        training_no = int(all_questions_no * self.train_data_percentage)
-        training = questions[0:training_no], masks[0:training_no], answers[0:training_no]
-
-        divisor = 2 if self.train_data_test else 1
-        validation_no = int((all_questions_no - training_no) / divisor)
-
-        validation = questions[training_no:training_no + validation_no], \
-                     masks[training_no:training_no + validation_no], \
-                     answers[training_no:training_no + validation_no]
-
-        testing = questions[training_no + validation_no:], \
-                  masks[training_no + validation_no:], \
-                  answers[training_no + validation_no:]
-
-        return training, validation, testing
-
     def load_glove(self, glove):
         if not isinstance(glove, WordEmbedding):
             raise ValueError("The glove needs to be a 'Glove' object.")
@@ -342,7 +252,6 @@ class GenericNetwork:
     def interactive_predict(self):
         import readline
 
-
         if not self.prediction_function:
             raise ValueError("Can't predict without a 'prediction_function'.")
 
@@ -358,19 +267,21 @@ class GenericNetwork:
                 print("Bye!")
                 break
 
-            i = self._questions_filter(sentence, show_workings=self.verbose)
-            m = self._questions_mask_filter(sentence)
+            dataset = "Q: %s\nA: NA\n\n" % sentence
+            dataset = MemoryDataset(word_embedding=self.glove,
+                                    augmenter=self.training_data.augmenter,
+                                    filename=dataset)
 
-            i = np.array([i])
-            m = np.array([m])
+            i = dataset.get_prepared_data(train_data_percentage=1,
+                                          train_data_shuffle=False,
+                                          max_sentence_size=self.max_words_per_sentence,
+                                          verbose=self.verbose)
+            i = i[0]  # Training split only.
+            i = list(i)[0]  # Only first item.
 
             ts = time.time()
 
-            if self.include_mask:
-                o = pred_fn(i, m)
-
-            else:
-                o = pred_fn(i)
+            o = pred_fn([i[0]], [i[1]])  # Question, mask.
 
             o = o[0][0]
             self.verbose and print(o)

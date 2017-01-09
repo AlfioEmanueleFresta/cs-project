@@ -13,7 +13,8 @@ t = Dataset(word_embedding=g,
             augmenter=CombinerAugmenter(max_window_size=3))
 
 
-a, b, c = t.get_prepared_data(train_data_percentage=.70)
+a, b, c = t.get_prepared_data(train_data_percentage=.70,
+                              output_categories_no=100)
 
 print("Computing...")
 a = list(a)
