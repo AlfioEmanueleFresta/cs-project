@@ -115,3 +115,40 @@ class CachedBatchIterator(ResettableIterator):
 
         return batch
 
+
+class CachedTupleBatchIterator(ResettableIterator):
+    """
+    >>> from project.helpers import CachedTupleBatchIterator
+    >>> a = range(30, 40)
+    >>> b = range(60, 70)
+    >>> c = range(10, 20)
+    >>> t = (a, b, c)
+    >>> t
+    (range(30, 40), range(60, 70), range(10, 20))
+    >>> i = CachedTupleBatchIterator(t, 5)
+    >>> i.__next__()
+    (array([30, 31, 32, 33, 34]),
+     array([60, 61, 62, 63, 64]),
+     array([10, 11, 12, 13, 14]))
+    """
+    def __init__(self, data, batch_size):
+        assert batch_size > 0
+        self.i = 0
+        self.batch_size = batch_size
+        self.data = tuple(np.array(list(x)) for x in data)
+
+    def reset(self):
+        self.i = 0
+
+    def __next__(self):
+        if self.i >= self.data[0].shape[0] / self.batch_size:
+            raise StopIteration
+
+        start = self.i * self.batch_size
+        end = min(start + self.batch_size, self.data[0].shape[0])
+
+        batch = tuple(t[start:end] for t in self.data)
+        self.i += 1
+
+        return batch
+
