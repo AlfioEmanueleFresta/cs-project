@@ -70,3 +70,45 @@ def split(l, a_percentage):
     all_no = len(l)
     a_no = int(all_no * a_percentage)
     return l[0:a_no], l[a_no:]
+
+
+class ResettableIterator:
+    """
+    An iterator which can be resetted.
+    """
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        raise NotImplementedError
+
+    def reset(self):
+        raise NotImplementedError
+
+
+class CachedBatchIterator(ResettableIterator):
+    """
+    Create an iterator over some data which returns it in batches of
+     a given fixed size. The data is generated and buffered at initialisation,
+     to a
+    """
+
+    def __init__(self, data, batch_size):
+        assert batch_size > 0
+        self.i = 0
+        self.batch_size = batch_size
+        self.data = np.array(list(data))
+
+    def reset(self):
+        self.i = 0
+
+    def __next__(self):
+        start = self.i * self.batch_size
+        end = min(start + self.batch_size, self.data.shape[0])
+        if end - start == 0:
+            raise StopIteration
+        batch = self.data[start:end]
+        self.i += 1
+        return batch
+
