@@ -18,12 +18,12 @@ args = parser.parse_args()
 
 g = WordEmbedding('data/embeddings/glove.6B.50d.txt',
                   verbose=args.verbose, use_cache=True,
-                  compute_clusters=True)
+                  compute_clusters=False)
 
 #t = Dataset('data/prepared/trec.txt.gz')
 t = FileDataset(word_embedding=g,
                 filename='data/prepared/trec.txt.gz',
-                augmenter=FakeAugmenter())
+                augmenter=FakeAugmenter(),)
 
 network_class = LSTMNetwork
 n = network_class(input_features_no=g.vector_length,

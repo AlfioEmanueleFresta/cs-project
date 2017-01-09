@@ -50,8 +50,7 @@ def shuffle(l):
     :return: A copy of the list in random order.
     """
     length = len(l)
-    indices = np.array(range(length))
-    np.random.shuffle(indices)
+    indices = np.random.permutation(length)
     output = []
     for i in indices:
         output.append(l[i])

@@ -93,17 +93,20 @@ class Dataset:
     def _replace_words_with_vectors(self, group):
         for question, answer_id in group:
             self.verbose and print("  WOEM", end=" ")
+            # TODO nicer!
             question = [tuple(self.word_embedding.get_word_vector(word) for word in words_tuple
                               if self.word_embedding.get_word_vector(word, verbose=self.verbose) is not None,)
                         for words_tuple in question]
             question = [t for t in question if t]  # Remove (,) tuples
+            question.append((self.word_embedding.get_word_vector(self.word_embedding.SYM_END),))
             yield question, answer_id
 
     def _sum_vector_groups(self, group):
         for question, answer_id in group:
-            question = [np.sum(list(vectors_tuple), axis=0)
-                        if len(vectors_tuple) > 0 else vectors_tuple[0]
-                        for vectors_tuple in question]
+            #question = [np.diff(list(vectors_tuple), axis=0)
+            #            if len(vectors_tuple) > 1 else vectors_tuple[0]
+            #            for vectors_tuple in question]
+            question = [x[0] for x in question]
             yield question, answer_id
 
     def _one_hot_answers(self, group, output_categories_no):
@@ -161,6 +164,8 @@ class Dataset:
 
         training, validation_and_test = split(questions, train_data_percentage)
         validation, test = split(validation_and_test, .5)
+
+        print(len(training), len(validation), len(test))
 
         self.verbose = verbose
 
