@@ -103,10 +103,9 @@ class Dataset:
 
     def _sum_vector_groups(self, group):
         for question, answer_id in group:
-            #question = [np.diff(list(vectors_tuple), axis=0)
-            #            if len(vectors_tuple) > 1 else vectors_tuple[0]
-            #            for vectors_tuple in question]
-            question = [x[0] for x in question]
+            question = [np.sum(list(vectors_tuple), axis=0)
+                        if len(vectors_tuple) > 1 else vectors_tuple[0]
+                        for vectors_tuple in question]
             yield question, answer_id
 
     def _one_hot_answers(self, group, output_categories_no):

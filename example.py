@@ -1,6 +1,6 @@
 import argparse
 
-from project.augmentation import FakeAugmenter
+from project.augmentation import FakeAugmenter, CombinerAugmenter
 from project.data import Dataset, FileDataset
 from project.expansion import WangExpander
 from project.network.lstm import LSTMNetwork
@@ -23,12 +23,12 @@ g = WordEmbedding('data/embeddings/glove.6B.50d.txt',
 #t = Dataset('data/prepared/trec.txt.gz')
 t = FileDataset(word_embedding=g,
                 filename='data/prepared/trec.txt.gz',
-                augmenter=FakeAugmenter(),)
+                augmenter=CombinerAugmenter(max_window_size=3),)
 
 network_class = LSTMNetwork
 n = network_class(input_features_no=g.vector_length,
                   output_categories_no=len(t.answers),
-                  max_words_per_sentence=100,
+                  max_words_per_sentence=200,
                   train_batch_size=1000,
                   verbose=args.verbose,
                   show_plot=args.display,
