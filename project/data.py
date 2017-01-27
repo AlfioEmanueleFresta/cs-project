@@ -12,7 +12,7 @@ class Dataset:
     Represent an data set.
     """
 
-    def __init__(self, word_embedding, filename, augmenter=None):
+    def __init__(self, word_embedding, filename, augmenter=None, reduce=1.0):
         """
         Load a data set from a file.
 
@@ -37,6 +37,15 @@ class Dataset:
         self.questions = OrderedSet([])
         self.augmenter = augmenter or FakeAugmenter()
         self._load()
+        assert 1 >= reduce > 0
+        if reduce < 1:
+            self._reduce(ratio=reduce)
+
+    def _reduce(self, ratio):
+        total = len(self.questions)
+        to_remove = int(total * (1 - ratio))
+        self.questions = shuffle(self.questions)
+        self.questions = self.questions[to_remove:]
 
     def _add_answer(self, answer_list):
         answer_list = tuple(answer_list)
