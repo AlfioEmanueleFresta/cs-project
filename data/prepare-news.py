@@ -20,7 +20,8 @@ with open(NEWS_FILE, 'rt') as f:
         if title == "":
             break
 
-        sentence = "%s. %s" % (title, subtitle)
+        #sentence = "%s. %s" % (title, subtitle)
+        sentence = "%s" % (title,)
         label = category
 
         if label in prepared:
