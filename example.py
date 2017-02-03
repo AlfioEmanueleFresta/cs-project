@@ -22,17 +22,19 @@ g = WordEmbedding('data/embeddings/glove.6B.50d.txt',
 
 #t = Dataset('data/prepared/trec.txt.gz')
 t = FileDataset(word_embedding=g,
-                filename='data/prepared/trec.txt.gz',
-                augmenter=CombinerAugmenter(max_window_size=3),)
+                filename='data/prepared/tagmynews.txt.gz',
+                augmenter=CombinerAugmenter(max_window_size=3,
+                                            min_vector_distance=1.45,
+                                            glove=g),)
 
 network_class = LSTMNetwork
 n = network_class(input_features_no=g.vector_length,
                   output_categories_no=len(t.answers),
-                  max_words_per_sentence=200,
+                  max_words_per_sentence=325,
                   train_batch_size=1000,
                   verbose=args.verbose,
                   show_plot=args.display,
-                  train_max_epoch=300)
+                  train_max_epochs=5000)
 
 n.build_network()
 n.compile_functions()

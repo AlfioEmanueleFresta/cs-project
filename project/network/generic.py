@@ -22,6 +22,13 @@ class GenericNetwork:
                 'train_data_test': True,
                 'train_data_shuffle': True,
                 'train_data_percentage': 0.7,
+                'train_max_epochs': 1000,
+                'train_max_epochs_without_improvement': 14,
+
+                # Stop training if the accuracy diverges of more than X% after the first N epochs
+                #'train_max_accuracy_diversion': 5,
+                #'train_max_accuracy_diversion_min_epochs': 200,
+
                 }
 
     def __init__(self, input_features_no, output_categories_no, **kwargs):
@@ -148,12 +155,17 @@ class GenericNetwork:
                 val_acc = val_acc / val_batches * 100
 
                 is_best_loss = False
+
                 if best_loss is None or val_loss < best_loss:
                     is_best_loss = True
                     best_loss = val_loss
                     best_acc = val_acc
                     best_epoch = epoch
                     self.mark_best()
+                    distance_to_last_best = 0
+
+                else:
+                    distance_to_last_best += 1
 
                 self.verbose and print("%4d/%4d  %9.6fs  %9.6f  "
                                        "%9.6f  %9.5f%%  %s  %9.5f%%" %
@@ -171,11 +183,25 @@ class GenericNetwork:
                                        acc_val=val_acc,
                                        redraw=not epoch % 5)
 
+                if distance_to_last_best > self.train_max_epochs_without_improvement:
+                    self.verbose and print("Early interruption. Reached %d epochs without "
+                                           "any improvement." % distance_to_last_best)
+                    raise KeyboardInterrupt
+
+                #if epoch > self.train_max_accuracy_diversion_min_epochs and\
+                #    abs(val_acc - train_acc) > self.train_max_accuracy_diversion:
+                #    self.verbose and print("Early interruption. Diversion higher than %d percent "
+                #                           "after initial %d epochs." % (
+                #        self.train_max_accuracy_diversion, self.train_max_accuracy_diversion_min_epochs
+                #    ))
+                #    raise KeyboardInterrupt
+
         except KeyboardInterrupt:
             print("Training interrupted at epoch %d." % epoch)
             print("Best result (epoch=%d, loss=%9.6f, accuracy"
                   "=%9.5f%%)" % (best_epoch, best_loss, best_acc))
 
+        self.epochs = epoch
         self._get_best()  # Get the best validation score.
         self._test(test)
 
@@ -199,9 +225,9 @@ class GenericNetwork:
                 test_acc += acc
                 test_batches += 1
             self.verbose and print("DONE", flush=True)
-            test_loss = test_err / test_batches
-            test_acc = test_acc / test_batches * 100
-            self.verbose and print("Test results (loss=%9.6f, accuracy=%9.5f%%)" % (test_loss, test_acc))
+            self.test_loss = test_err / test_batches
+            self.test_acc = test_acc / test_batches * 100
+            self.verbose and print("Test results (loss=%9.6f, accuracy=%9.5f%%)" % (self.test_loss, self.test_acc))
 
         except KeyboardInterrupt:
             print("SKIPPED")

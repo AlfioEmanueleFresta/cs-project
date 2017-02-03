@@ -31,7 +31,7 @@ class LSTMNetwork(GenericNetwork):
 
             # Training options
             'train_objective': lasagne.objectives.categorical_crossentropy,
-            'train_max_epochs': 250,
+            'train_max_epochs': 1000,
             'train_updates': lasagne.updates.nesterov_momentum,
             'train_updates_learning_rate': 0.01,
             'train_updates_momentum': 0.9,
