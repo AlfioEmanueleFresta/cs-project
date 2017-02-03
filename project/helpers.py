@@ -1,10 +1,23 @@
 import numpy as np
 import itertools as it
+import math
 
 from theano import function, config, shared, sandbox
 import theano.tensor as T
 import theano
 import warnings
+
+
+def log_scale(steps):
+    """
+    Returns a log scale between 0 and 1 in a given number of steps.
+    :param steps: The number of desired values between 0 and 1 (0 excluded).
+    :return: A list of real numbers.
+    """
+    assert steps > 0
+    f = lambda x: 1 - math.log10(x)
+    values = reversed(list(np.linspace(1, 10, steps + 1))[0:-1])
+    return [f(x) for x in values]
 
 
 def get_options_combinations(options):

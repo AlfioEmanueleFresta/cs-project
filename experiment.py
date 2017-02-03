@@ -1,6 +1,6 @@
 from project.augmentation import FakeAugmenter, CombinerAugmenter
 from project.data import FileDataset
-from project.helpers import get_options_combinations
+from project.helpers import get_options_combinations, log_scale
 from project.network.lstm import LSTMNetwork
 from project.vectorization.embedding import WordEmbedding
 from datetime import datetime
@@ -11,8 +11,10 @@ import csv
 
 results_file = 'results.csv'
 
-reduction_granularity = 10
+reduction_granularity = 20
 repeat_times = 5
+
+
 
 datasets = {
     # Name: (Filename, Max Words per sentence)
@@ -31,7 +33,7 @@ options = {
     "augmenter": [FakeAugmenter(),
                   CombinerAugmenter(max_window_size=2, glove=g),
                   CombinerAugmenter(max_window_size=3, glove=g)],
-    "reduction": list(np.linspace(0, 1, reduction_granularity + 1))[1:],
+    "reduction": log_scale(steps=reduction_granularity),
     "time": list(range(repeat_times)),
 }
 
