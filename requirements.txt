@@ -4,6 +4,4 @@ theano
 git+https://github.com/Lasagne/Lasagne
 ordered-set
 tabulate
-matplotlib
-cairocffi
 pandas
