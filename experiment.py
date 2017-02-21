@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from project.augmentation import FakeAugmenter, CombinerAugmenter
 from project.data import FileDataset
 from project.helpers import get_options_combinations, log_scale
@@ -9,18 +11,18 @@ import numpy as np
 import csv
 
 
-results_file = 'results.csv'
+results_file = 'results-trec.csv'
 
-reduction_granularity = 20
-repeat_times = 5
+reduction_granularity = 30
+repeat_times = 20
 
 
 
 datasets = {
     # Name: (Filename, Max Words per sentence)
-    # "TREC": ("data/prepared/trec.txt.gz", 200),
-    # "Tag My News (Titles and Subtitles)": ("data/prepared/tagmynews.txt.gz", 325),
-    "Tag My News (Titles Only)": ("data/prepared/tagmynews-titles-only.txt.gz", 325),
+    "TREC": ("data/prepared/trec.txt.gz", 200),
+    #"Tag My News (Titles and Subtitles)": ("data/prepared/tagmynews.txt.gz", 325),
+    #"Tag My News (Titles Only)": ("data/prepared/tagmynews-titles-only.txt.gz", 325),
 }
 
 
@@ -28,14 +30,13 @@ g = WordEmbedding('data/embeddings/glove.6B.50d.txt',
                   verbose=True, use_cache=True,
                   compute_clusters=False)
 
-options = {
-    "dataset": list(datasets.keys()),
-    "augmenter": [FakeAugmenter(),
-                  CombinerAugmenter(max_window_size=2, glove=g),
-                  CombinerAugmenter(max_window_size=3, glove=g)],
-    "reduction": log_scale(steps=reduction_granularity),
-    "time": list(range(repeat_times)),
-}
+options = OrderedDict({})
+options.update({"dataset": list(datasets.keys())})
+options.update({"augmenter": [FakeAugmenter(),
+                              CombinerAugmenter(max_window_size=2, glove=g),
+                              CombinerAugmenter(max_window_size=3, glove=g)],})
+options.update({"reduction": log_scale(steps=reduction_granularity),})
+options.update({"time": list(range(repeat_times)),})
 
 combinations = get_options_combinations(options)
 

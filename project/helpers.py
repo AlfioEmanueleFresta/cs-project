@@ -21,7 +21,8 @@ def log_scale(steps):
 
 
 def get_options_combinations(options):
-    return [{key: value for (key, value) in zip(options, values)} for values in it.product(*options.values())]
+    the_product = it.product(*options.values())
+    return [{key: value for (key, value) in zip(options, values)} for values in the_product]
 
 
 def one_hot(n=100, i=0, positive=1, negative=0):
