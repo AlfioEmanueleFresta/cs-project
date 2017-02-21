@@ -1,3 +1,4 @@
+import argparse
 from collections import OrderedDict
 
 from project.augmentation import FakeAugmenter, CombinerAugmenter
@@ -17,11 +18,21 @@ results_file = base_path + 'results.csv'
 worker_index_file = base_path + 'workers.index'
 
 reduction_granularity = 30      # How many values between 0 and 1 for `r`
-repeat_times = 20               # How many times will each experiment be repeated
-one_worker_per_time = True      # Should I use one worker per each time?
+repeat_times = 30               # How many times will each experiment be repeated
 
-worker_id = random.randint(1000, 9999)
-print("worker_id=%d" % worker_id)
+parser = argparse.ArgumentParser(description='Run the experiment as a single-task or multi-task script.')
+parser.add_argument('--workers', dest='workers', type=int, default=1, help='The overall number of workers.')
+parser.add_argument('--worker-id', dest='worker_id', type=int, default=1, help='The ID of this worker.')
+args = parser.parse_args()
+
+workers = args.workers
+worker_id = args.worker_id
+
+assert workers >= 1             # There needs to be at least one worker
+assert worker_id > 0            # The ID must be greater than 1
+assert worker_id <= workers     # The ID must be lower or equal to the number of workers
+
+one_worker_per_time = workers != 1      # Should I use one worker per each time?
 
 
 datasets = {
@@ -49,13 +60,9 @@ print("Generated a list of %d combinations for the experiment." % len(combinatio
 
 if one_worker_per_time:
     print("Multi-worker experiment. Using a section of the list.")
-    this_index = get_index_and_increment(worker_index_file)
-    if this_index >= repeat_times:
-        print("WARNING. Obtained index %d, but the experiment only needs %d repetitions. Terminating" \
-              % (this_index, repeat_times))
-        exit(0)
-    print("worker_index=%d" % this_index)
-    list_no = int(len(combinations) / repeat_times)
+    this_index = worker_id - 1  # Zero-indexed index
+    print("worker_id=%d" % worker_id)
+    list_no = int(len(combinations) / workers)
     list_start = int(this_index * list_no)
 
 else:
