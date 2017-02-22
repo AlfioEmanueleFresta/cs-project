@@ -45,6 +45,12 @@ class CombinerAugmenter(Augmenter):
         for word in sentence:
             history.append(word)
             for window_size in range(0, min(len(history), self.max_window_size)):
+
+                t = tuple(history[-(window_size + 1):])
+                augmented_sentence.append(t)
+                continue
+
+                ## AFTER: Single tuples method
                 t = (history[-(window_size + 1)], word)
 
                 # If this is the original word, or if it is over the minimum distance
