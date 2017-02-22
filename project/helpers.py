@@ -21,7 +21,8 @@ def log_scale(steps):
 
 
 def get_options_combinations(options):
-    return [{key: value for (key, value) in zip(options, values)} for values in it.product(*options.values())]
+    the_product = it.product(*options.values())
+    return list([{key: value for (key, value) in zip(options, values)} for values in the_product])
 
 
 def one_hot(n=100, i=0, positive=1, negative=0):
@@ -39,6 +40,18 @@ def one_hot_decode(vector):
         return np.argmax(vector)
     except AttributeError:
         return vector.index(max(vector))
+
+
+def get_index_and_increment(file_name):
+    try:
+        with open(file_name, 'rt') as f:
+            current = int(f.readline())
+    except FileNotFoundError:
+        current = -1
+    current += 1
+    with open(file_name, 'wt') as f:
+        f.write("%d" % (current,))
+    return current
 
 
 def kmeans(X, clusters_no, epochs=500, learning_rate=0.01,
