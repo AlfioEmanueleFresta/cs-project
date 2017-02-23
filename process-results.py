@@ -10,7 +10,8 @@ SHOW_PLOTS = True
 
 
 csv = pd.read_csv("results.csv")
-csv.drop(['Start time', 'End time'], axis=1, inplace=True)
+csv.drop(['Worker ID', 'Start time', 'End time'], axis=1, inplace=True)
+csv.dropna(axis=0, how='any', inplace=True)  # Drop rows with NA
 
 processed = csv.groupby(['Dataset', 'Augmentation technique', 'Dataset Reduction (r)']).aggregate(np.mean)
 processed.to_csv("results-processed.csv")
@@ -34,6 +35,8 @@ for dataset in csv['Dataset'].unique():
         data = dataset_rows[dataset_rows['Augmentation technique'] == technique]
         accuracy_vectors = [data[data['Dataset Reduction (r)'] == r_value]['Test accuracy'] for r_value in r_values]
         axes[i].boxplot(accuracy_vectors)
+        axes[i].set_xlabel("Dataset Reduction (r) value")
+        axes[i].set_ylabel("Mean Test-set Accuracy (%)")
         axes[i].set_title("%s, %s" % (dataset, technique))
 
     f.subplots_adjust(hspace=0)
@@ -53,8 +56,10 @@ for dataset in csv['Dataset'].unique():
 
     plt.legend(all_techniques, loc='upper left')
     plt.xscale("log", nonposx='clip')
+    plt.title("%s" % dataset)
+    plt.xlabel("Dataset Reduction (r) value")
+    plt.ylabel("Mean Test-set Accuracy (%)")
     SHOW_PLOTS and plt.show()
-
 
 
 
