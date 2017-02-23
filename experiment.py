@@ -115,7 +115,8 @@ for i, options in enumerate(combinations):
     end_time = datetime.now()
 
     line = [worker_id,
-            start_time, end_time,
+            str(start_time),
+            str(end_time),
             options['dataset'],
             str(options['augmenter']),
             options['reduction'],
