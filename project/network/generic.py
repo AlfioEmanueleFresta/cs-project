@@ -23,7 +23,7 @@ class GenericNetwork:
                 'train_data_shuffle': True,
                 'train_data_percentage': 0.7,
                 'train_max_epochs': 1000,
-                'train_max_epochs_without_improvement': 14,
+                'train_max_epochs_without_improvement': 19,
 
                 # Stop training if the accuracy diverges of more than X% after the first N epochs
                 #'train_max_accuracy_diversion': 5,
