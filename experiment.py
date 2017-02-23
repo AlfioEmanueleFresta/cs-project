@@ -1,4 +1,5 @@
 import argparse
+import json
 from collections import OrderedDict
 
 from project.augmentation import FakeAugmenter, CombinerAugmenter
@@ -37,9 +38,9 @@ one_worker_per_time = workers != 1      # Should I use one worker per each time?
 
 datasets = {
     # Name: (Filename, Max Words per sentence)
-    "TREC": ("data/prepared/trec.txt.gz", 200),
+    #"TREC": ("data/prepared/trec.txt.gz", 200),
     #"Tag My News (Titles and Subtitles)": ("data/prepared/tagmynews.txt.gz", 325),
-    #"Tag My News (Titles Only)": ("data/prepared/tagmynews-titles-only.txt.gz", 325),
+    "Tag My News (Titles Only)": ("data/prepared/tagmynews-titles-only.txt.gz", 325),
 }
 
 
@@ -127,4 +128,5 @@ for i, options in enumerate(combinations):
         writer = csv.writer(csvfile)
         writer.writerow(line)
 
+    print("OUTPUT: %s" % json.dumps(line))
     print("\n")
