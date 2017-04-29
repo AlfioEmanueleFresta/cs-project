@@ -8,7 +8,7 @@ REMOVE_ZEROS = True
 PRINT_DISTRIBUTIONS = False
 SHOW_PLOTS = False
 
-output_tex = '../thesis/contents/x_results.tex'
+output_tex_filter = '../thesis/contents/x_results_%s.tex'
 
 csv = pd.read_csv("results.csv")
 csv.drop(['Start time', 'End time'], axis=1, inplace=True)
@@ -17,6 +17,10 @@ csv.dropna(axis=0, how='any', inplace=True)  # Drop rows with NA
 processed = csv.groupby(['Dataset', 'Augmentation technique', 'Dataset Reduction (r)']).aggregate(np.mean)
 processed.to_csv("results-processed.csv")
 
+dataset_short_names = {"Google Snippets": "snippets",
+                       "TagMyNews (Titles Only)": "tgn",
+                       "TREC": "trec"}
+                       
 table = {}
 
 if output_tex:
@@ -26,6 +30,8 @@ if output_tex:
 
 
 for dataset in csv['Dataset'].unique():
+    dataset_short_name = dataset_short_names[dataset]
+
     dataset_rows = csv[csv['Dataset'] == dataset]
     print("Working on dataset %s, row count is %d." % (dataset, len(dataset_rows)))
 
@@ -118,17 +124,14 @@ for dataset in csv['Dataset'].unique():
 
 
     if output_tex:
-        with open(output_tex, 'at') as f:
+
 
             techniques = list(reversed(list(table.keys())))
 
-            output = "\subsection{%s}\n\n" % dataset
+        with open(output_tex_filter % ("%s_mean" % dataset_short_name), 'wt') as f:
 
             ## MEAN
-            output += """
-    
-                \paragraph{Mean values}
-    
+            output = """   
                 \\begin{center}
     
                     \\begin{small}	\\begin{small}
@@ -138,7 +141,6 @@ for dataset in csv['Dataset'].unique():
     
                         $r$
             """
-
             for technique in techniques:
                 output += " & %s " % (technique,)
 
@@ -165,13 +167,14 @@ for dataset in csv['Dataset'].unique():
                             \end{small}	\end{small}
                         \end{center}
             """
+            
+            f.write(output)
 
-
+        with open(output_tex_filter % ("%s_variance" % dataset_short_name), 'wt') as f:
+        
             ## VARIANCE
-            output += """
-    
-                \paragraph{Variance ($\sigma^{2}$)}
-    
+            output = """
+       
                 \\begin{center}
     
                     \\begin{small}	\\begin{small}
@@ -208,13 +211,14 @@ for dataset in csv['Dataset'].unique():
                             \end{small}	\end{small}
                         \end{center}
             """
-
+            
+            f.write(output)
+            
+        with open(output_tex_filter % ("%s_pvalue" % dataset_short_name), 'wt') as f:
 
             ## SIGNIFICANCE
-            output += """
-    
-                \paragraph{p-values}
-    
+            output = """
+      
                 \\begin{center}
     
                     \\begin{small}	\\begin{small}
@@ -262,4 +266,8 @@ for dataset in csv['Dataset'].unique():
 
 
             f.write(output)
-            print("%s file updated." % output_tex)
+        
+        print("Tex files updated.")
+        
+            
+
