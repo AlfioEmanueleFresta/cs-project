@@ -19,6 +19,11 @@ processed.to_csv("results-processed.csv")
 
 table = {}
 
+if output_tex:
+    # Empty the file.
+    with open(output_tex, 'wt') as f:
+        f.write("")
+
 
 for dataset in csv['Dataset'].unique():
     dataset_rows = csv[csv['Dataset'] == dataset]
@@ -112,149 +117,149 @@ for dataset in csv['Dataset'].unique():
 
 
 
-if output_tex:
-    with open(output_tex, 'wt') as f:
+    if output_tex:
+        with open(output_tex, 'at') as f:
 
-        techniques = list(reversed(list(table.keys())))
+            techniques = list(reversed(list(table.keys())))
 
-        output = ""
+            output = "\subsection{%s}\n\n" % dataset
 
-        ## MEAN
-        output += """
+            ## MEAN
+            output += """
+    
+                \paragraph{Mean values}
+    
+                \\begin{center}
+    
+                    \\begin{small}	\\begin{small}
+                            \\begin{tabularx}{\\textwidth}{|X|X|X|X|}
+    
+                        \\hline
+    
+                        $r$
+            """
 
-            \subsection{Mean values}
-
-            \\begin{center}
-
-                \\begin{small}	\\begin{small}
-                        \\begin{tabularx}{\\textwidth}{|X|X|X|X|}
-
-                    \\hline
-
-                    $r$
-        """
-
-        for technique in techniques:
-            output += " & %s " % (technique,)
-
-        output += "\\\\\n"
-        output += "\hline\n"
-
-        for columns in zip(*(table[i] for i in techniques)):
-
-            r_value = columns[0][0]
-            output += " %f " % r_value
-
-            for column in columns:
-                mean = column[1]
-                var = column[2]
-                output += " & $%f$ " % mean
-                #output += " & $Mean = %f$, $\sigma^{2}= %f$ " % (mean, var)
+            for technique in techniques:
+                output += " & %s " % (technique,)
 
             output += "\\\\\n"
+            output += "\hline\n"
 
-        output += """
-                    \hline
+            for columns in zip(*(table[i] for i in techniques)):
 
-                                \end{tabularx}
-                        \end{small}	\end{small}
-                    \end{center}
-        """
+                r_value = columns[0][0]
+                output += " %f " % r_value
 
+                for column in columns:
+                    mean = column[1]
+                    var = column[2]
+                    output += " & $%f$ " % mean
+                    #output += " & $Mean = %f$, $\sigma^{2}= %f$ " % (mean, var)
 
-        ## VARIANCE
-        output += """
+                output += "\\\\\n"
 
-            \subsection{Variance ($\sigma^{2}$)}
-
-            \\begin{center}
-
-                \\begin{small}	\\begin{small}
-                        \\begin{tabularx}{\\textwidth}{|X|X|X|X|}
-
-                    \\hline
-
-                    $r$
-        """
-
-        for technique in techniques:
-            output += " & %s " % (technique,)
-
-        output += "\\\\\n"
-        output += "\hline\n"
-
-        for columns in zip(*(table[i] for i in techniques)):
-
-            r_value = columns[0][0]
-            output += " %f " % r_value
-
-            for column in columns:
-                mean = column[1]
-                var = column[2]
-                output += " & $%f$ " % var
-                # output += " & $Mean = %f$, $\sigma^{2}= %f$ " % (mean, var)
-
-            output += "\\\\\n"
-
-        output += """
-                    \hline
-
-                                \end{tabularx}
-                        \end{small}	\end{small}
-                    \end{center}
-        """
+            output += """
+                        \hline
+    
+                                    \end{tabularx}
+                            \end{small}	\end{small}
+                        \end{center}
+            """
 
 
-        ## SIGNIFICANCE
-        output += """
+            ## VARIANCE
+            output += """
+    
+                \paragraph{Variance ($\sigma^{2}$)}
+    
+                \\begin{center}
+    
+                    \\begin{small}	\\begin{small}
+                            \\begin{tabularx}{\\textwidth}{|X|X|X|X|}
+    
+                        \\hline
+    
+                        $r$
+            """
 
-            \subsection{p-values}
-
-            \\begin{center}
-
-                \\begin{small}	\\begin{small}
-                        \\begin{tabularx}{\\textwidth}{|X|X|X|}
-
-                    \\hline
-
-                    $r$
-        """
-
-        for technique in techniques:
-            if technique == "No Augmentation":
-                continue
-            output += " & %s " % (technique,)
-
-        output += "\\\\\n"
-        output += "\hline\n"
-
-        for columns in zip(*(table[i] for i in techniques if i != "No Augmentation")):
-
-            r_value = columns[0][0]
-            output += " %f " % r_value
-
-            for column in columns:
-                mean = column[1]
-                var = column[2]
-                p_value = column[3]
-
-                if p_value <= 0.05:
-                    output += (" & \\boldmath{$%f$} " % p_value)
-                else:
-                    output += (" & $%f$ " % p_value)
-
-                # output += " & $Mean = %f$, $\sigma^{2}= %f$ " % (mean, var)
+            for technique in techniques:
+                output += " & %s " % (technique,)
 
             output += "\\\\\n"
+            output += "\hline\n"
 
-        output += """
-                    \hline
+            for columns in zip(*(table[i] for i in techniques)):
 
-                                \end{tabularx}
-                        \end{small}	\end{small}
-                    \end{center}
-        """
+                r_value = columns[0][0]
+                output += " %f " % r_value
+
+                for column in columns:
+                    mean = column[1]
+                    var = column[2]
+                    output += " & $%f$ " % var
+                    # output += " & $Mean = %f$, $\sigma^{2}= %f$ " % (mean, var)
+
+                output += "\\\\\n"
+
+            output += """
+                        \hline
+    
+                                    \end{tabularx}
+                            \end{small}	\end{small}
+                        \end{center}
+            """
 
 
-        f.write(output)
-        print("%s file updated." % output_tex)
+            ## SIGNIFICANCE
+            output += """
+    
+                \paragraph{p-values}
+    
+                \\begin{center}
+    
+                    \\begin{small}	\\begin{small}
+                            \\begin{tabularx}{\\textwidth}{|X|X|X|}
+    
+                        \\hline
+    
+                        $r$
+            """
+
+            for technique in techniques:
+                if technique == "No Augmentation":
+                    continue
+                output += " & %s " % (technique,)
+
+            output += "\\\\\n"
+            output += "\hline\n"
+
+            for columns in zip(*(table[i] for i in techniques if i != "No Augmentation")):
+
+                r_value = columns[0][0]
+                output += " %f " % r_value
+
+                for column in columns:
+                    mean = column[1]
+                    var = column[2]
+                    p_value = column[3]
+
+                    if p_value <= 0.05:
+                        output += (" & \\boldmath{$%f$} " % p_value)
+                    else:
+                        output += (" & $%f$ " % p_value)
+
+                    # output += " & $Mean = %f$, $\sigma^{2}= %f$ " % (mean, var)
+
+                output += "\\\\\n"
+
+            output += """
+                        \hline
+    
+                                    \end{tabularx}
+                            \end{small}	\end{small}
+                        \end{center}
+            """
+
+
+            f.write(output)
+            print("%s file updated." % output_tex)
