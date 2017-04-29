@@ -119,8 +119,6 @@ if output_tex:
 
         output = ""
 
-
-
         ## MEAN
         output += """
 
