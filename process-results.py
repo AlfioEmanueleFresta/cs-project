@@ -18,15 +18,15 @@ processed = csv.groupby(['Dataset', 'Augmentation technique', 'Dataset Reduction
 processed.to_csv("results-processed.csv")
 
 dataset_short_names = {"Google Snippets": "snippets",
-                       "TagMyNews (Titles Only)": "tgn",
+                       "Tag My News (Titles Only)": "tgn",
                        "TREC": "trec"}
                        
 table = {}
 
-if output_tex:
-    # Empty the file.
-    with open(output_tex, 'wt') as f:
-        f.write("")
+#if output_tex_filter:
+#    # Empty the file.
+#    with open(output_tex_filter, 'wt') as f:
+#        f.write("")
 
 
 for dataset in csv['Dataset'].unique():
@@ -123,10 +123,10 @@ for dataset in csv['Dataset'].unique():
 
 
 
-    if output_tex:
+    if output_tex_filter:
 
 
-            techniques = list(reversed(list(table.keys())))
+        techniques = list(reversed(list(table.keys())))
 
         with open(output_tex_filter % ("%s_mean" % dataset_short_name), 'wt') as f:
 
