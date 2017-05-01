@@ -38,8 +38,8 @@ one_worker_per_time = workers != 1      # Should I use one worker per each time?
 
 datasets = {
     # Name: (Filename, Max Words per sentence)
-    #"TREC": ("data/prepared/trec.txt.gz", 200),
-    #"Tag My News (Titles and Subtitles)": ("data/prepared/tagmynews.txt.gz", 325),
+    "TREC": ("data/prepared/trec.txt.gz", 200),
+    "Tag My News (Titles and Subtitles)": ("data/prepared/tagmynews.txt.gz", 325),
     "Tag My News (Titles Only)": ("data/prepared/tagmynews-titles-only.txt.gz", 325),
 }
 
