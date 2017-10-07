@@ -40,7 +40,8 @@ datasets = {
     # Name: (Filename, Max Words per sentence)
     #"TREC": ("data/prepared/trec.txt.gz", 200),
     #"Tag My News (Titles and Subtitles)": ("data/prepared/tagmynews.txt.gz", 325),
-    "Tag My News (Titles Only)": ("data/prepared/tagmynews-titles-only.txt.gz", 325),
+    #"Tag My News (Titles Only)": ("data/prepared/tagmynews-titles-only.txt.gz", 325),
+    "Google Snippets": ("data/prepared/snippets.txt.gz", 325),
 }
 
 
