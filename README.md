@@ -2,14 +2,62 @@
 
 ## Installation
 
+The software can be configured on a modern Ubuntu 16.04+ machine by running:
+
 ```bash
-$ cd cs-project/
-$ virtualenv -p python3 .venv
-$ source .venv/bin/activate
-$ pip install -r requirements.txt
+$ cd cs-project/                                # cd into this directory
+$ virtualenv -p python3 .venv                   # start a new python virtual environment
+$ source .venv/bin/activate                     # activate the newly-created virtual environment
+$ pip install -r requirements.txt               # install the requirements in the virtual environment (1)
+$ pip install -r requirements-processing.txt    # install the requirements in the virtual environment (2)
 ```
 
-## Usage
+## How to run the experiment
+
+The experiment that has been included with the report can be run either in a single thread/worker, or in N threads/workers.
+Please note that the experiment would likely take weeks to run in the first case, so it is highly recommended
+ to run it in parallel on multiple machines (e.g. a cluster).
+
+A modern NVIDIA GPU configured to work with the Theano installation would also significantly speed up the
+experimentation process.
+
+
+### Single machine
+
+Simply run:
+
+```
+$ python experiment.py
+```
+
+The training process is shown on stdout. The results are saved to the `output.csv` file.
+
+### Multiple workers
+
+Example with 5 workers:
+
+```
+machine1$ python experiment.py --workers 5 --worker-id 1
+machine2$ python experiment.py --workers 5 --worker-id 2
+...
+machine5$ python experiment.py --workers 5 --worker-id 5
+```
+
+The workload is split across all workers. The results are saved to the `output.csv` file. Note that the workers will try
+to append text to this file atomically, as soon as each line is ready, so this file can be on a shared file-systems, and
+all the results saved to the same file.
+
+
+## Process results and prepare graphs
+
+The following script can be launched to prepare all graphs, and generate the Latex source code for the result tables:
+
+```
+$ python process-results.py
+```
+
+
+## `example.py` usage -- Interactive shell
 
 | Option         | Description                                                                                                                   |
 |----------------|-------------------------------------------------------------------------------------------------------------------------------|
@@ -19,9 +67,9 @@ $ pip install -r requirements.txt
 | `--resume`     | Load the last saved model before starting training, effectively resuming the training phase (e.g. if terminated prematurely). |
 | `--transient`  | After training, don't save the model to disk. Any existing model will be preserved.                                           |
 
-## Example
+### Example
 
-### Training
+#### Training
 
 ```bash
 $ example.py -v
@@ -77,7 +125,7 @@ predicted in 0.0144 seconds
 Bye!
 ```
 
-## Prediction only
+### Prediction only
 
 ```bash
 $ example.py -v --no-train
@@ -102,7 +150,7 @@ predicted in 0.0211 seconds
 ```
 
 
-## Prediction only (quiet mode)
+### Prediction only (quiet mode)
 
 ```bash
 $ example.py -v --no-train
